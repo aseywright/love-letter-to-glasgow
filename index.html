@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Love Letter to Glasgow</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero-screen" id="heroScreen">
+        <div class="hero-scene">
+          <div class="hero-copy">
+            <p class="eyebrow">Love Letter to Glasgow</p>
+            <h1>Street Photography by Andrew Seywright</h1>
+            <p class="subtitle">
+              A photobook for my Glasgow work, shaped to feel closer to a real object than a gallery.
+            </p>
+            <div class="hero-actions">
+              <button id="openBookBtn" class="button button-primary">Open the book</button>
+            </div>
+          </div>
+
+          <div class="hero-preview" aria-hidden="true">
+            <div class="closed-book-shadow"></div>
+            <div class="closed-book">
+              <div class="closed-book-spine"></div>
+              <div class="closed-book-cover">
+                <img src="Images/Cover.jpg" alt="" />
+                <div class="cover-grid"></div>
+                <div class="cover-image-frame"></div>
+                <div class="cover-tape">
+                  <span class="cover-tape-title">Love Letter to Glasgow</span>
+                  <span class="cover-tape-note">Fragments from the street</span>
+                </div>
+                <div class="cover-spine-note">For Fern</div>
+                <div class="cover-hinge-shadow"></div>
+                <div class="cover-vignette"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="book-shell hidden" id="bookShell" aria-live="polite">
+        <div class="book-meta">
+          <div class="book-title">
+            <span>Love Letter To</span>
+            <strong>Glasgow</strong>
+          </div>
+          <div class="book-progress" id="bookProgress">Spread 1 / 1</div>
+        </div>
+
+        <div class="book-stage">
+          <div class="book-drop-shadow"></div>
+
+          <div class="book" id="book">
+            <div class="book-board">
+              <div class="page-stack page-stack-left"></div>
+              <div class="page-stack page-stack-right"></div>
+
+              <div class="page-bed">
+                <div class="spine-glow"></div>
+                <div class="page page-left" id="leftPage"></div>
+                <div class="page page-right" id="rightPage"></div>
+
+                <div class="flip-sheet hidden" id="flipSheet" aria-hidden="true">
+                  <div class="sheet-face sheet-front" id="sheetFront"></div>
+                  <div class="sheet-face sheet-back" id="sheetBack"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-controls">
+          <button class="button button-secondary" id="coverBtn" aria-label="Return to cover">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M6 4.5h10.5a2 2 0 0 1 2 2v11.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 0 4 22V7a2.5 2.5 0 0 1 2-2.45Z" />
+                <path d="M6.5 6H18" />
+                <path d="M6.5 20H18" />
+              </svg>
+            </span>
+            <span class="button-label">Cover</span>
+          </button>
+          <button class="button button-secondary" id="prevBtn" aria-label="Previous spread">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M14.5 5.5 8 12l6.5 6.5" />
+              </svg>
+            </span>
+            <span class="button-label">Previous</span>
+          </button>
+          <button class="button button-secondary" id="nextBtn" aria-label="Next spread">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
+              </svg>
+            </span>
+            <span class="button-label">Next</span>
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
