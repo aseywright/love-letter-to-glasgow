@@ -14,7 +14,7 @@ const bookProgress = document.getElementById("bookProgress");
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const COVER_FILE = "Cover.jpg";
-const INSIDE_COVER_FILE = "inside cover.jpg";
+const INSIDE_COVER_FILE = "inside cover.JPG";
 const MARGIN_PRESETS = {
   bleed: "0px",
   tight: "clamp(4px, 0.55vw, 8px)",
