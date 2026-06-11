@@ -159,7 +159,7 @@ h1 {
 
 .closed-book {
   position: relative;
-  width: min(400px, 84%);
+  width: clamp(216px, 56vw, 360px);
   aspect-ratio: 0.8;
   transform: rotate(-12deg) translateY(8px);
   transform-style: preserve-3d;
@@ -194,6 +194,9 @@ h1 {
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 -14px 26px rgba(0, 0, 0, 0.28),
     0 32px 48px rgba(0, 0, 0, 0.28);
+  /* Become a sizing context so every cover detail scales as one unit with the
+     book, keeping the landing identical in proportion on any screen. */
+  container-type: size;
 }
 
 .closed-book-cover > img {
@@ -201,7 +204,7 @@ h1 {
   height: 100%;
   display: block;
   object-fit: contain;
-  padding: 126px 62px 40px;
+  padding: 25cqh 15.5cqw 8cqh;
   filter: saturate(0.88) contrast(1.02) brightness(0.82);
   background: #050505;
 }
@@ -211,25 +214,25 @@ h1 {
   right: 18%;
   top: 42%;
   bottom: 14%;
-  border-width: 4px;
+  border-width: 1cqw;
 }
 
 .closed-book-cover .cover-tape {
   left: 18%;
   right: 18%;
-  top: 34px;
+  top: 7cqh;
 }
 
 .closed-book-cover .cover-tape-title {
-  font-size: clamp(1rem, 1.15vw, 1.42rem);
+  font-size: clamp(0.92rem, 7cqw, 1.6rem);
   line-height: 0.88;
   letter-spacing: -0.06em;
   max-width: 7ch;
 }
 
 .closed-book-cover .cover-tape-note {
-  margin-top: 6px;
-  font-size: 0.38rem;
+  margin-top: 1.2cqh;
+  font-size: clamp(0.36rem, 1.7cqw, 0.5rem);
   letter-spacing: 0.14em;
   line-height: 1.15;
   max-width: none;
@@ -237,9 +240,9 @@ h1 {
 }
 
 .closed-book-cover .cover-spine-note {
-  left: 14px;
-  bottom: 18px;
-  font-size: 0.52rem;
+  left: 3.5cqw;
+  bottom: 3.6cqh;
+  font-size: clamp(0.46rem, 1.5cqw, 0.6rem);
 }
 
 .book-shell {
@@ -291,11 +294,33 @@ h1 {
 }
 
 .book {
+  /* Vertical space reserved for the title bar, controls and shell padding.
+     One formula sizes the book at every width so nothing drifts between breakpoints. */
+  --chrome: 210px;
+  --single-ratio: 0.74;
   position: relative;
-  width: min(1180px, 100%);
+  width: min(1180px, 100%, calc((100dvh - var(--chrome)) * 1.58));
   margin: 0 auto;
   aspect-ratio: 1.58;
   perspective: 2800px;
+}
+
+/* Narrow screens show one page at a time (portrait), set by JS via data-view. */
+.book[data-view="single"] {
+  aspect-ratio: var(--single-ratio);
+  width: min(100%, calc((100dvh - var(--chrome)) * var(--single-ratio)));
+}
+
+.book[data-view="single"] .page-left,
+.book[data-view="single"] .page-right,
+.book[data-view="single"] .page-stack,
+.book[data-view="single"] .spine-glow,
+.book[data-view="single"] .flip-sheet {
+  display: none;
+}
+
+.book[data-view="single"] .book-board {
+  transform: none;
 }
 
 .book-board {
@@ -996,6 +1021,46 @@ h1 {
   }
 }
 
+/* Single-page view: one page filling the board, with a soft slide between pages. */
+.page-single {
+  left: 0;
+  right: 0;
+  width: 100%;
+  border-radius: 16px;
+  z-index: 4;
+  display: none;
+  cursor: pointer;
+  transition: transform 240ms cubic-bezier(0.33, 0.1, 0.2, 1), opacity 240ms ease;
+}
+
+.book[data-view="single"] .page-single {
+  display: block;
+}
+
+.page-single.no-transition {
+  transition: none !important;
+}
+
+.page-single.is-out-next {
+  transform: translateX(-7%);
+  opacity: 0;
+}
+
+.page-single.is-out-prev {
+  transform: translateX(7%);
+  opacity: 0;
+}
+
+.page-single.is-in-next {
+  transform: translateX(7%);
+  opacity: 0;
+}
+
+.page-single.is-in-prev {
+  transform: translateX(-7%);
+  opacity: 0;
+}
+
 .button {
   border: none;
   padding: 12px 18px;
@@ -1120,10 +1185,6 @@ h1 {
     justify-items: end;
     padding-right: clamp(6px, 1vw, 18px);
   }
-
-  .closed-book {
-    width: min(360px, 78%);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1149,10 +1210,6 @@ h1 {
   .hero-preview {
     min-height: 320px;
   }
-
-  .book {
-    aspect-ratio: 1.3;
-  }
 }
 
 @media (max-width: 720px) {
@@ -1177,39 +1234,6 @@ h1 {
 
   .hero-preview {
     min-height: 250px;
-  }
-
-  .closed-book {
-    width: min(270px, 76vw);
-    transform: rotate(-10deg) translateY(4px);
-  }
-
-  .closed-book-cover > img {
-    padding: 118px 54px 34px;
-  }
-
-  .closed-book-cover .cover-image-frame {
-    left: 18%;
-    right: 18%;
-    top: 42%;
-    bottom: 15%;
-    border-width: 4px;
-  }
-
-  .closed-book-cover .cover-tape {
-    left: 18%;
-    right: 18%;
-    top: 30px;
-  }
-
-  .closed-book-cover .cover-tape-title {
-    font-size: clamp(0.96rem, 4.5vw, 1.28rem);
-  }
-
-  .closed-book-cover .cover-tape-note {
-    font-size: 0.4rem;
-    letter-spacing: 0.12em;
-    white-space: nowrap;
   }
 
   .book-shell {
@@ -1241,9 +1265,8 @@ h1 {
   }
 
   .book {
-    width: min(100%, calc((100dvh - 206px) * 1.48));
-    max-width: 100%;
-    aspect-ratio: 1.48;
+    /* Less chrome to reserve on phones; the base formula handles sizing. */
+    --chrome: 158px;
   }
 
   .book-stage {
@@ -1408,9 +1431,8 @@ h1 {
   }
 
   .book {
-    width: min(100%, calc((100dvh - 118px) * 1.58));
-    max-width: calc(100dvw - 24px);
-    aspect-ratio: 1.58;
+    /* Short landscape viewports: reserve very little vertical chrome. */
+    --chrome: 112px;
   }
 
   .book.is-closed-cover {
