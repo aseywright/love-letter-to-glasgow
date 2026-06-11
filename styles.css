@@ -295,32 +295,14 @@ h1 {
 
 .book {
   /* Vertical space reserved for the title bar, controls and shell padding.
-     One formula sizes the book at every width so nothing drifts between breakpoints. */
+     One formula sizes the book at every width so nothing drifts between
+     breakpoints; on portrait phones it resolves to a fit-to-width spread. */
   --chrome: 210px;
-  --single-ratio: 0.74;
   position: relative;
   width: min(1180px, 100%, calc((100dvh - var(--chrome)) * 1.58));
   margin: 0 auto;
   aspect-ratio: 1.58;
   perspective: 2800px;
-}
-
-/* Narrow screens show one page at a time (portrait), set by JS via data-view. */
-.book[data-view="single"] {
-  aspect-ratio: var(--single-ratio);
-  width: min(100%, calc((100dvh - var(--chrome)) * var(--single-ratio)));
-}
-
-.book[data-view="single"] .page-left,
-.book[data-view="single"] .page-right,
-.book[data-view="single"] .page-stack,
-.book[data-view="single"] .spine-glow,
-.book[data-view="single"] .flip-sheet {
-  display: none;
-}
-
-.book[data-view="single"] .book-board {
-  transform: none;
 }
 
 .book-board {
@@ -1021,44 +1003,117 @@ h1 {
   }
 }
 
-/* Single-page view: one page filling the board, with a soft slide between pages. */
-.page-single {
-  left: 0;
-  right: 0;
-  width: 100%;
-  border-radius: 16px;
-  z-index: 4;
+/* Per-photo zoom button (pointer devices); touch users tap the photo itself. */
+.zoom-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 5;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(8, 8, 8, 0.46);
+  color: #f4f1eb;
+  cursor: zoom-in;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease;
+  backdrop-filter: blur(6px);
+}
+
+.zoom-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.page-media:hover .zoom-btn,
+.zoom-btn:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.zoom-btn:hover {
+  background: rgba(8, 8, 8, 0.66);
+}
+
+/* On touch, tapping the photo zooms, so the button is redundant. */
+@media (hover: none) and (pointer: coarse) {
+  .zoom-btn {
+    display: none;
+  }
+}
+
+/* Full-screen photo zoom overlay. */
+.zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 48px);
+  background: rgba(3, 3, 3, 0.92);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.zoom-overlay.is-open {
+  opacity: 1;
+}
+
+.zoom-overlay[hidden] {
   display: none;
+}
+
+.zoom-overlay img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  transform: scale(0.97);
+  transition: transform 220ms ease;
+}
+
+.zoom-overlay.is-open img {
+  transform: scale(1);
+}
+
+.zoom-close {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.6);
+  color: #f4f1eb;
   cursor: pointer;
-  transition: transform 240ms cubic-bezier(0.33, 0.1, 0.2, 1), opacity 240ms ease;
 }
 
-.book[data-view="single"] .page-single {
-  display: block;
+.zoom-close svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
 }
 
-.page-single.no-transition {
-  transition: none !important;
-}
-
-.page-single.is-out-next {
-  transform: translateX(-7%);
-  opacity: 0;
-}
-
-.page-single.is-out-prev {
-  transform: translateX(7%);
-  opacity: 0;
-}
-
-.page-single.is-in-next {
-  transform: translateX(7%);
-  opacity: 0;
-}
-
-.page-single.is-in-prev {
-  transform: translateX(-7%);
-  opacity: 0;
+body.zoom-locked {
+  overflow: hidden;
 }
 
 .button {

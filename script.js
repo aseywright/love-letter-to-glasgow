@@ -7,15 +7,15 @@ const rightPage = document.getElementById("rightPage");
 const flipSheet = document.getElementById("flipSheet");
 const sheetFront = document.getElementById("sheetFront");
 const sheetBack = document.getElementById("sheetBack");
-const singlePage = document.getElementById("singlePage");
 const coverBtn = document.getElementById("coverBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const bookProgress = document.getElementById("bookProgress");
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-// Below this width the book shows one page at a time instead of a two-page spread.
-const wideViewport = window.matchMedia("(min-width: 760px)");
+// Touch devices turn pages by swipe and zoom a photo by tapping it; pointer
+// devices turn by clicking a page half and zoom by double-clicking.
+const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
 const COVER_FILE = "Cover.jpg";
 const INSIDE_COVER_FILE = "inside cover.JPG";
 const MARGIN_PRESETS = {
@@ -26,13 +26,11 @@ const MARGIN_PRESETS = {
 };
 let spreads = [];
 let currentIndex = 0;
-// Position within the current spread when viewing one page at a time (single mode).
-let currentSub = 0;
 let isAnimating = false;
 let hasLoaded = false;
 
-function isSingleView() {
-  return !wideViewport.matches;
+function isTouch() {
+  return coarsePointer.matches;
 }
 
 openBookBtn.addEventListener("click", () => {
@@ -47,13 +45,24 @@ openBookBtn.addEventListener("click", () => {
 prevBtn.addEventListener("click", () => navigate(-1));
 nextBtn.addEventListener("click", () => navigate(1));
 coverBtn.addEventListener("click", () => jumpToCover());
-leftPage.addEventListener("click", () => navigate(-1));
-rightPage.addEventListener("click", () => navigate(1));
 
-// In single-page mode the page fills the stage, so split it into left/right tap zones.
-singlePage.addEventListener("click", (event) => {
-  const bounds = singlePage.getBoundingClientRect();
-  navigate(event.clientX - bounds.left < bounds.width / 2 ? -1 : 1);
+// Page interaction differs by input type so turning and zooming never collide:
+//  - pointer (desktop): click a page half to turn; zoom via the per-photo button.
+//  - touch (mobile): swipe to turn; tap a photo to zoom it.
+let swipeHandled = false;
+
+[
+  [leftPage, -1],
+  [rightPage, 1],
+].forEach(([page, direction]) => {
+  page.addEventListener("click", () => {
+    if (isTouch()) {
+      if (swipeHandled) return; // ignore the click that trails a swipe
+      openZoom(page);
+    } else {
+      navigate(direction);
+    }
+  });
 });
 
 // Touch swipe: drag left to advance, right to go back.
@@ -82,27 +91,24 @@ book.addEventListener(
     touchStartY = null;
 
     if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
+    swipeHandled = true;
     navigate(dx < 0 ? 1 : -1);
+    setTimeout(() => {
+      swipeHandled = false;
+    }, 400);
   },
   { passive: true }
 );
 
-// Re-render when crossing the single/spread breakpoint so the layout stays consistent.
-const handleViewChange = () => {
-  if (!hasLoaded || spreads.length === 0) return;
-  currentSub = 0;
-  renderCurrent();
-  updateControls();
-};
-
-if (typeof wideViewport.addEventListener === "function") {
-  wideViewport.addEventListener("change", handleViewChange);
-} else if (typeof wideViewport.addListener === "function") {
-  wideViewport.addListener(handleViewChange);
-}
-
 document.addEventListener("keydown", (event) => {
   if (bookShell.classList.contains("hidden")) return;
+
+  if (event.key === "Escape" && isZoomOpen()) {
+    closeZoom();
+    return;
+  }
+
+  if (isZoomOpen()) return;
 
   if (event.key === "ArrowLeft") {
     navigate(-1);
@@ -120,21 +126,12 @@ document.addEventListener("keydown", (event) => {
 function navigate(direction) {
   if (isAnimating || spreads.length === 0) return;
 
-  if (isSingleView()) {
-    navigateSingle(direction);
-  } else {
-    navigateSpread(direction);
-  }
-}
-
-function navigateSpread(direction) {
   const targetIndex = currentIndex + direction;
 
   if (targetIndex < 0 || targetIndex >= spreads.length) return;
 
   if (prefersReducedMotion.matches) {
     currentIndex = targetIndex;
-    currentSub = 0;
     renderSpread(spreads[currentIndex]);
     updateControls();
     return;
@@ -147,108 +144,15 @@ function navigateSpread(direction) {
   playTurn(direction, targetIndex);
 }
 
-function navigateSingle(direction) {
-  const pages = spreads[currentIndex].mobilePages;
-  let nextSpread = currentIndex;
-  let nextSub = currentSub + direction;
-
-  if (nextSub < 0) {
-    nextSpread = currentIndex - 1;
-    if (nextSpread < 0) return;
-    nextSub = spreads[nextSpread].mobilePages.length - 1;
-  } else if (nextSub >= pages.length) {
-    nextSpread = currentIndex + 1;
-    if (nextSpread >= spreads.length) return;
-    nextSub = 0;
-  }
-
-  performSingleTurn(direction, nextSpread, nextSub);
-}
-
-function performSingleTurn(direction, nextSpread, nextSub) {
-  if (prefersReducedMotion.matches) {
-    currentIndex = nextSpread;
-    currentSub = nextSub;
-    renderSingle(spreads[currentIndex], currentSub);
-    updateControls();
-    return;
-  }
-
-  isAnimating = true;
-  updateControls();
-
-  const outClass = direction === 1 ? "is-out-next" : "is-out-prev";
-  const inStartClass = direction === 1 ? "is-in-next" : "is-in-prev";
-
-  singlePage.classList.add(outClass);
-
-  singlePage.addEventListener(
-    "transitionend",
-    () => {
-      singlePage.classList.remove(outClass);
-      currentIndex = nextSpread;
-      currentSub = nextSub;
-      renderSingle(spreads[currentIndex], currentSub);
-
-      // Place the new page off to the side without animating, then settle it in.
-      singlePage.classList.add("no-transition", inStartClass);
-      void singlePage.offsetWidth;
-      singlePage.classList.remove("no-transition");
-
-      requestAnimationFrame(() => {
-        singlePage.classList.remove(inStartClass);
-      });
-
-      singlePage.addEventListener(
-        "transitionend",
-        () => {
-          isAnimating = false;
-          updateControls();
-        },
-        { once: true }
-      );
-    },
-    { once: true }
-  );
-}
-
-function isAtStart() {
-  return currentIndex <= 0 && (!isSingleView() || currentSub <= 0);
-}
-
-function isAtEnd() {
-  if (currentIndex < spreads.length - 1) return false;
-  if (!isSingleView()) return true;
-  const pages = spreads[currentIndex]?.mobilePages || [];
-  return currentSub >= pages.length - 1;
-}
-
-function isAtCover() {
-  return currentIndex === 0 && (!isSingleView() || currentSub === 0);
-}
-
 function progressLabel() {
   if (!spreads.length) return "Preparing spreads";
-
-  if (isSingleView()) {
-    let total = 0;
-    let position = 0;
-    spreads.forEach((spread, index) => {
-      const count = (spread.mobilePages || []).length;
-      if (index < currentIndex) position += count;
-      total += count;
-    });
-    position += currentSub + 1;
-    return `Page ${position} / ${total}`;
-  }
-
   return currentIndex === 0 ? `Cover / ${spreads.length}` : `Spread ${currentIndex + 1} / ${spreads.length}`;
 }
 
 function updateControls() {
-  prevBtn.disabled = isAnimating || isAtStart();
-  nextBtn.disabled = isAnimating || isAtEnd();
-  coverBtn.disabled = isAnimating || spreads.length === 0 || isAtCover();
+  prevBtn.disabled = isAnimating || currentIndex <= 0;
+  nextBtn.disabled = isAnimating || currentIndex >= spreads.length - 1;
+  coverBtn.disabled = isAnimating || spreads.length === 0 || currentIndex === 0;
   bookProgress.textContent = progressLabel();
 }
 
@@ -520,78 +424,23 @@ function buildSpreads(manifest) {
   buildAutoSpreads(images);
 }
 
-// Pages that only make sense as part of a two-page spread are dropped in single view.
-const MOBILE_SKIP_TYPES = new Set(["blank", "insidecover", "endpaper"]);
-
-// Reduce a spread to the page(s) shown one-at-a-time on narrow screens, preserving order.
-function computeMobilePages(spread) {
-  const left = spread.left;
-  const right = spread.right;
-
-  // One image spanning both pages collapses to a single full page on mobile.
-  if (
-    left?.type === "image" &&
-    right?.type === "image" &&
-    left.bleedHalf &&
-    right.bleedHalf &&
-    isSameFile(left.file, right.file)
-  ) {
-    return [imagePage(left.file, { margin: left.margin, overlay: left.overlay })];
-  }
-
-  const pages = [];
-
-  for (const page of [left, right]) {
-    if (!page || MOBILE_SKIP_TYPES.has(page.type)) continue;
-
-    if (page.type === "image" && page.bleedHalf) {
-      pages.push(imagePage(page.file, { margin: page.margin, overlay: page.overlay }));
-    } else {
-      pages.push(page);
-    }
-  }
-
-  return pages.length ? pages : [blankPage()];
-}
-
 function setSpreads(list) {
-  spreads = list.map((spread) => ({ ...spread, mobilePages: computeMobilePages(spread) }));
+  spreads = list.slice();
   currentIndex = 0;
-  currentSub = 0;
   hasLoaded = true;
-  renderCurrent();
+  renderSpread(spreads[currentIndex]);
   updateControls();
 }
 
-function renderCurrent() {
-  if (spreads.length === 0) return;
-
-  if (isSingleView()) {
-    renderSingle(spreads[currentIndex], currentSub);
-  } else {
-    renderSpread(spreads[currentIndex]);
-  }
-}
-
 function renderSpread(spread) {
-  book.dataset.view = "spread";
   renderPageFace(leftPage, spread.left, "left");
   renderPageFace(rightPage, spread.right, "right");
   book.dataset.spreadBleed = spread.left?.bleedHalf && spread.right?.bleedHalf ? "true" : "false";
   syncBookState();
 }
 
-function renderSingle(spread, sub) {
-  book.dataset.view = "single";
-  const pages = spread.mobilePages || [blankPage()];
-  const descriptor = pages[Math.min(sub, pages.length - 1)] || blankPage();
-  book.dataset.spreadBleed = "false";
-  renderPageFace(singlePage, descriptor, "single");
-  syncBookState();
-}
-
 function syncBookState() {
-  const isClosedCover = !isSingleView() && currentIndex === 0 && !isAnimating;
+  const isClosedCover = currentIndex === 0 && !isAnimating;
   book.classList.toggle("is-closed-cover", isClosedCover);
 
   if (!isAnimating) {
@@ -651,7 +500,6 @@ function playTurn(direction, targetIndex) {
     "animationend",
     () => {
       currentIndex = targetIndex;
-      currentSub = 0;
       isAnimating = false;
       book.classList.remove("is-turning-next", "is-turning-prev", "is-opening-cover");
       flipSheet.className = "flip-sheet hidden";
@@ -669,6 +517,12 @@ function renderPageFace(target, descriptor, side) {
   target.dataset.side = side;
   target.dataset.kind = pageDescriptor.type;
   target.dataset.bleed = pageDescriptor.type === "image" && Boolean(pageDescriptor.bleedHalf) ? "true" : "false";
+  // Remember the full photo so a half-bleed page can still zoom the whole image.
+  if (pageDescriptor.type === "image") {
+    target.dataset.file = pageDescriptor.file;
+  } else {
+    delete target.dataset.file;
+  }
   target.innerHTML = "";
 
   const content = document.createElement("div");
@@ -735,6 +589,19 @@ function createImageFigure(descriptor) {
   img.alt = "Street photograph from Love Letter to Glasgow";
   img.loading = "eager";
   figure.appendChild(img);
+
+  // Quiet zoom affordance for pointer devices (touch users tap the photo itself).
+  const zoomBtn = document.createElement("button");
+  zoomBtn.type = "button";
+  zoomBtn.className = "zoom-btn";
+  zoomBtn.setAttribute("aria-label", "Enlarge photograph");
+  zoomBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>';
+  zoomBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openZoom(descriptor.file);
+  });
+  figure.appendChild(zoomBtn);
 
   return figure;
 }
@@ -871,12 +738,80 @@ function createCoverBlock(descriptor) {
 }
 
 function jumpToCover() {
-  if (isAnimating || spreads.length === 0 || isAtCover()) return;
+  if (isAnimating || spreads.length === 0 || currentIndex === 0) return;
 
   currentIndex = 0;
-  currentSub = 0;
-  renderCurrent();
+  renderSpread(spreads[currentIndex]);
   updateControls();
+}
+
+// --- Photo zoom ---------------------------------------------------------
+// A tapped photo (touch) or the per-photo zoom button (pointer) opens the full
+// image full-screen so detail survives the smaller side-by-side mobile spread.
+let zoomOverlay = null;
+let zoomImg = null;
+
+function ensureZoomOverlay() {
+  if (zoomOverlay) return;
+
+  zoomOverlay = document.createElement("div");
+  zoomOverlay.className = "zoom-overlay";
+  zoomOverlay.setAttribute("role", "dialog");
+  zoomOverlay.setAttribute("aria-modal", "true");
+  zoomOverlay.setAttribute("aria-label", "Enlarged photograph");
+  zoomOverlay.hidden = true;
+
+  zoomImg = document.createElement("img");
+  zoomImg.alt = "Enlarged street photograph from Love Letter to Glasgow";
+  zoomOverlay.appendChild(zoomImg);
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "zoom-close";
+  close.setAttribute("aria-label", "Close enlarged photograph");
+  close.innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6 18 18M18 6 6 18"/></svg>';
+  close.addEventListener("click", closeZoom);
+  zoomOverlay.appendChild(close);
+
+  zoomOverlay.addEventListener("click", (event) => {
+    if (event.target === zoomOverlay) closeZoom();
+  });
+
+  document.body.appendChild(zoomOverlay);
+}
+
+function openZoom(source) {
+  const file = typeof source === "string" ? source : source?.dataset?.file;
+  if (!file) return;
+
+  ensureZoomOverlay();
+  zoomImg.src = imagePath(file);
+  zoomOverlay.hidden = false;
+  document.body.classList.add("zoom-locked");
+  requestAnimationFrame(() => zoomOverlay.classList.add("is-open"));
+}
+
+function closeZoom() {
+  if (!isZoomOpen()) return;
+
+  zoomOverlay.classList.remove("is-open");
+  document.body.classList.remove("zoom-locked");
+
+  const finish = () => {
+    zoomOverlay.hidden = true;
+    zoomImg.removeAttribute("src");
+  };
+
+  if (prefersReducedMotion.matches) {
+    finish();
+  } else {
+    zoomOverlay.addEventListener("transitionend", finish, { once: true });
+  }
+}
+
+function isZoomOpen() {
+  return Boolean(zoomOverlay) && !zoomOverlay.hidden;
 }
 
 function loadImages() {
