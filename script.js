@@ -547,18 +547,42 @@ function renderCaption(index) {
     return;
   }
 
-  para.textContent = line;
+  // One inline-block span per word, with real spaces between so it still wraps.
+  para.textContent = "";
+  const words = line.split(" ");
+  const spans = words.map((word, i) => {
+    const span = document.createElement("span");
+    span.className = "cap-word";
+    span.textContent = word;
+    para.appendChild(span);
+    if (i < words.length - 1) para.appendChild(document.createTextNode(" "));
+    return span;
+  });
+
   spreadCaption.hidden = false;
 
+  // The clip reveals each word left-to-right; the generous vertical inset keeps
+  // the script's ascenders and descenders from being clipped.
+  const HIDDEN = "inset(-30% 100% -30% 0)";
+  const SHOWN = "inset(-30% 0% -30% 0)";
+
   if (window.gsap && !prefersReducedMotion.matches) {
-    gsap.fromTo(
-      spreadCaption,
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.9, ease: "power2.out", delay: 0.15, overwrite: true }
-    );
+    gsap.set(spreadCaption, { opacity: 1 });
+    gsap.set(spans, { clipPath: HIDDEN, webkitClipPath: HIDDEN });
+    const stagger = Math.min(0.085, 1.15 / Math.max(spans.length, 1));
+    gsap.to(spans, {
+      clipPath: SHOWN,
+      webkitClipPath: SHOWN,
+      duration: 0.42,
+      ease: "power2.out",
+      stagger,
+      delay: 0.18,
+    });
   } else {
     spreadCaption.style.opacity = "1";
-    spreadCaption.style.transform = "none";
+    spans.forEach((span) => {
+      span.style.clipPath = SHOWN;
+    });
   }
 }
 
