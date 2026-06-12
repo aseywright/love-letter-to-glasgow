@@ -918,6 +918,7 @@ h1 {
 /* Narrative line as a caption in the dark BELOW the book — off the photographs
    entirely, so it reads quietly with the work rather than over it. */
 .spread-caption {
+  position: relative;
   display: grid;
   place-content: start center;
   justify-items: center;
@@ -940,16 +941,22 @@ h1 {
   font-size: clamp(0.96rem, 1.5vw, 1.32rem);
   line-height: 1.5;
   letter-spacing: 0.005em;
-  /* Soft warm bone, gently translucent so it sits with the B&W work rather
-     than punching off the dark. No hard shadow — it's on the dark, not a photo. */
-  color: rgba(228, 222, 208, 0.74);
+  /* Luminous off-white, as if scratched into the emulsion. */
+  color: rgba(240, 239, 233, 0.9);
+  /* Projector life: a faint weave and flicker. */
+  animation: film-weave 6s ease-in-out infinite, film-flicker 4.3s steps(1, end) infinite;
 }
 
 /* Each word is uncovered by a soft-edged mask sweeping left-to-right, so the
-   line flows on like wet ink rather than wiping in. --reveal goes 0 -> 1. */
+   line flows on like wet ink rather than wiping in. --reveal goes 0 -> 1.
+   The red/cyan offsets are the chromatic fringing of an old optical print. */
 .spread-caption .cap-word {
   display: inline-block;
   --reveal: 1;
+  text-shadow:
+    0.9px 0 0 rgba(255, 56, 56, 0.5),
+    -0.9px 0.2px 0 rgba(64, 214, 255, 0.46),
+    0 0 8px rgba(255, 255, 255, 0.24);
   -webkit-mask-image: linear-gradient(
     90deg,
     #000 calc(var(--reveal) * 118% - 18%),
@@ -961,6 +968,62 @@ h1 {
     transparent calc(var(--reveal) * 118%)
   );
   will-change: mask-image;
+}
+
+@keyframes film-weave {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(0.5px, -0.4px); }
+  50% { transform: translate(-0.4px, 0.3px); }
+  75% { transform: translate(0.3px, 0.4px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes film-flicker {
+  0%, 100% { filter: brightness(1); }
+  47% { filter: brightness(1.05); }
+  49% { filter: brightness(0.88); }
+  51% { filter: brightness(1.07); }
+  53% { filter: brightness(0.96); }
+  72% { filter: brightness(1.02); }
+  74% { filter: brightness(0.92); }
+}
+
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Scratched-emulsion edges. The displacement filter is desktop-only — it is the
+   one costly piece, and on phones the chroma + flicker already read as film. */
+@media (min-width: 760px) {
+  .spread-caption .cap-word {
+    filter: url(#filmScratch);
+  }
+}
+
+/* Drifting film grain over the caption, faded at the edges so it isn't a box. */
+.spread-caption::after {
+  content: "";
+  position: absolute;
+  inset: -16% -8%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 170px 170px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 52%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, #000 52%, transparent 100%);
+  animation: film-grain 0.5s steps(2, end) infinite;
+}
+
+@keyframes film-grain {
+  0% { background-position: 0 0; }
+  50% { background-position: -85px 45px; }
+  100% { background-position: 55px -60px; }
 }
 
 .flip-sheet {

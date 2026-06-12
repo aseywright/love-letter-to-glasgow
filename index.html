@@ -13,6 +13,14 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Roughens the narrative strokes as if scratched into film emulsion. -->
+    <svg width="0" height="0" class="svg-defs" aria-hidden="true" focusable="false">
+      <filter id="filmScratch" x="-15%" y="-40%" width="130%" height="180%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.26" numOctaves="2" seed="7" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4.2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
     <div class="page-shell">
       <header class="hero-screen" id="heroScreen">
         <div class="hero-scene">
