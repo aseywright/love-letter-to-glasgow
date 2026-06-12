@@ -16,6 +16,8 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 // Touch devices turn pages by swipe and zoom a photo by tapping it; pointer
 // devices turn by clicking a page half and zoom by double-clicking.
 const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
+// Keep in sync with the turn animation duration in styles.css.
+const TURN_DURATION_MS = 1320;
 const COVER_FILE = "Cover.jpg";
 const INSIDE_COVER_FILE = "inside cover.JPG";
 const MARGIN_PRESETS = {
@@ -134,6 +136,7 @@ function navigate(direction) {
     currentIndex = targetIndex;
     renderSpread(spreads[currentIndex]);
     updateControls();
+    preloadAdjacent();
     return;
   }
 
@@ -430,6 +433,7 @@ function setSpreads(list) {
   hasLoaded = true;
   renderSpread(spreads[currentIndex]);
   updateControls();
+  preloadAdjacent();
 }
 
 function renderSpread(spread) {
@@ -437,6 +441,34 @@ function renderSpread(spread) {
   renderPageFace(rightPage, spread.right, "right");
   book.dataset.spreadBleed = spread.left?.bleedHalf && spread.right?.bleedHalf ? "true" : "false";
   syncBookState();
+}
+
+// Warm the browser cache for nearby spreads so a turn never reveals a load gap.
+const preloadedFiles = new Set();
+
+function preloadFile(file) {
+  if (!file || preloadedFiles.has(file)) return;
+  preloadedFiles.add(file);
+  const img = new Image();
+  img.src = imagePath(file);
+}
+
+function spreadFiles(spread) {
+  const files = [];
+  for (const page of [spread?.left, spread?.right]) {
+    if (page && (page.type === "image" || page.type === "cover") && page.file) {
+      files.push(page.file);
+    }
+  }
+  return files;
+}
+
+function preloadAdjacent() {
+  [currentIndex - 1, currentIndex + 1, currentIndex + 2].forEach((index) => {
+    if (index >= 0 && index < spreads.length) {
+      spreadFiles(spreads[index]).forEach(preloadFile);
+    }
+  });
 }
 
 function syncBookState() {
@@ -496,20 +528,26 @@ function playTurn(direction, targetIndex) {
     flipSheet.classList.add(animationClass);
   });
 
-  flipSheet.addEventListener(
-    "animationend",
-    () => {
-      currentIndex = targetIndex;
-      isAnimating = false;
-      book.classList.remove("is-turning-next", "is-turning-prev", "is-opening-cover");
-      flipSheet.className = "flip-sheet hidden";
-      sheetFront.innerHTML = "";
-      sheetBack.innerHTML = "";
-      renderSpread(spreads[currentIndex]);
-      updateControls();
-    },
-    { once: true }
-  );
+  let settled = false;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(safety);
+    currentIndex = targetIndex;
+    isAnimating = false;
+    book.classList.remove("is-turning-next", "is-turning-prev", "is-opening-cover");
+    flipSheet.className = "flip-sheet hidden";
+    sheetFront.innerHTML = "";
+    sheetBack.innerHTML = "";
+    renderSpread(spreads[currentIndex]);
+    updateControls();
+    preloadAdjacent();
+  };
+
+  flipSheet.addEventListener("animationend", finish, { once: true });
+  // Fallback so the book never stays frozen if animationend is missed
+  // (e.g. the tab was backgrounded mid-turn and the animation was paused).
+  const safety = setTimeout(finish, TURN_DURATION_MS + 250);
 }
 
 function renderPageFace(target, descriptor, side) {
@@ -743,6 +781,7 @@ function jumpToCover() {
   currentIndex = 0;
   renderSpread(spreads[currentIndex]);
   updateControls();
+  preloadAdjacent();
 }
 
 // --- Photo zoom ---------------------------------------------------------
