@@ -962,6 +962,44 @@ h1 {
   transform: rotateY(180deg);
 }
 
+/* Fold shadow on the turning page: darkens toward the binding so the lifting
+   sheet reads as a curving page rather than a flat card. GSAP fades these in
+   and out across the turn (see playTurn). */
+.sheet-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  backface-visibility: hidden;
+  opacity: 0;
+  z-index: 7;
+}
+
+.sheet-shade-front {
+  transform: rotateY(0deg);
+}
+
+.sheet-shade-back {
+  transform: rotateY(180deg);
+}
+
+.flip-sheet.is-next .sheet-shade-front,
+.flip-sheet.is-prev .sheet-shade-front {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.14) 40%, transparent 70%);
+}
+
+.flip-sheet.is-prev .sheet-shade-front {
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.14) 40%, transparent 70%);
+}
+
+.flip-sheet.is-next .sheet-shade-back,
+.flip-sheet.is-prev .sheet-shade-back {
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.14) 40%, transparent 70%);
+}
+
+.flip-sheet.is-prev .sheet-shade-back {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.14) 40%, transparent 70%);
+}
+
 .book.is-turning-next .page-right,
 .book.is-turning-prev .page-left {
   box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.04);

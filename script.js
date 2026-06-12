@@ -7,6 +7,8 @@ const rightPage = document.getElementById("rightPage");
 const flipSheet = document.getElementById("flipSheet");
 const sheetFront = document.getElementById("sheetFront");
 const sheetBack = document.getElementById("sheetBack");
+const sheetShadeFront = document.getElementById("sheetShadeFront");
+const sheetShadeBack = document.getElementById("sheetShadeBack");
 const coverBtn = document.getElementById("coverBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
@@ -30,6 +32,7 @@ let spreads = [];
 let currentIndex = 0;
 let isAnimating = false;
 let hasLoaded = false;
+let turnTween = null;
 
 function isTouch() {
   return coarsePointer.matches;
@@ -522,21 +525,29 @@ function prepareTurn(direction, currentSpread, targetSpread) {
 }
 
 function playTurn(direction, targetIndex) {
-  const animationClass = direction === 1 ? "animate-next" : "animate-prev";
-
-  requestAnimationFrame(() => {
-    flipSheet.classList.add(animationClass);
-  });
-
   let settled = false;
+  let safety;
+
   const finish = () => {
     if (settled) return;
     settled = true;
     clearTimeout(safety);
+
+    if (turnTween) {
+      turnTween.kill();
+      turnTween = null;
+    }
+
     currentIndex = targetIndex;
     isAnimating = false;
     book.classList.remove("is-turning-next", "is-turning-prev", "is-opening-cover");
     flipSheet.className = "flip-sheet hidden";
+
+    if (window.gsap) {
+      gsap.set(flipSheet, { clearProps: "transform" });
+      gsap.set([sheetShadeFront, sheetShadeBack], { opacity: 0 });
+    }
+
     sheetFront.innerHTML = "";
     sheetBack.innerHTML = "";
     renderSpread(spreads[currentIndex]);
@@ -544,10 +555,35 @@ function playTurn(direction, targetIndex) {
     preloadAdjacent();
   };
 
-  flipSheet.addEventListener("animationend", finish, { once: true });
-  // Fallback so the book never stays frozen if animationend is missed
-  // (e.g. the tab was backgrounded mid-turn and the animation was paused).
-  const safety = setTimeout(finish, TURN_DURATION_MS + 250);
+  if (window.gsap) {
+    const endRotation = direction === 1 ? -180 : 180;
+
+    gsap.set(flipSheet, {
+      rotationY: 0,
+      transformOrigin: direction === 1 ? "0% 50%" : "100% 50%",
+    });
+    gsap.set([sheetShadeFront, sheetShadeBack], { opacity: 0 });
+
+    // Weighted turn: eased lift and settle. The fold shadow swells as the page
+    // nears edge-on, then hands off to the back face's shadow as it falls.
+    const tl = gsap.timeline({ onComplete: finish });
+    tl.to(flipSheet, { rotationY: endRotation, duration: 1.05, ease: "power2.inOut" }, 0);
+    tl.to(sheetShadeFront, { opacity: 0.55, duration: 0.52, ease: "power1.in" }, 0);
+    tl.set(sheetShadeBack, { opacity: 0.55 }, 0.52);
+    tl.to(sheetShadeBack, { opacity: 0, duration: 0.53, ease: "power1.out" }, 0.52);
+    turnTween = tl;
+
+    safety = setTimeout(finish, 1500);
+  } else {
+    const animationClass = direction === 1 ? "animate-next" : "animate-prev";
+    requestAnimationFrame(() => {
+      flipSheet.classList.add(animationClass);
+    });
+    flipSheet.addEventListener("animationend", finish, { once: true });
+    // Fallback so the book never stays frozen if animationend is missed
+    // (e.g. the tab was backgrounded mid-turn and the animation was paused).
+    safety = setTimeout(finish, TURN_DURATION_MS + 250);
+  }
 }
 
 function renderPageFace(target, descriptor, side) {
