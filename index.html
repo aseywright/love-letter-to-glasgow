@@ -73,34 +73,29 @@
               </div>
             </div>
           </div>
+
         </div>
 
         <div class="book-controls">
-          <button class="button button-secondary" id="coverBtn" aria-label="Return to cover">
-            <span class="button-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M6 4.5h10.5a2 2 0 0 1 2 2v11.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 0 4 22V7a2.5 2.5 0 0 1 2-2.45Z" />
-                <path d="M6.5 6H18" />
-                <path d="M6.5 20H18" />
-              </svg>
-            </span>
-            <span class="button-label">Cover</span>
+          <button class="nav-arrow nav-arrow-prev" id="prevBtn" type="button" aria-label="Previous spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 4.5 7.5 12l7.5 7.5" />
+            </svg>
           </button>
-          <button class="button button-secondary" id="prevBtn" aria-label="Previous spread">
-            <span class="button-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M14.5 5.5 8 12l6.5 6.5" />
-              </svg>
-            </span>
-            <span class="button-label">Previous</span>
+          <button class="control-cover" id="coverBtn" type="button" aria-label="Return to cover">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6 4.5h10.5a2 2 0 0 1 2 2v11.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 0 4 22V7a2.5 2.5 0 0 1 2-2.45Z" />
+              <path d="M6.5 6H18" />
+              <path d="M6.5 20H18" />
+            </svg>
           </button>
-          <button class="button button-secondary" id="nextBtn" aria-label="Next spread">
-            <span class="button-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
-              </svg>
-            </span>
-            <span class="button-label">Next</span>
+          <div class="progress-track" aria-hidden="true">
+            <span class="progress-fill" id="progressFill"></span>
+          </div>
+          <button class="nav-arrow nav-arrow-next" id="nextBtn" type="button" aria-label="Next spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="m9 4.5 7.5 7.5L9 19.5" />
+            </svg>
           </button>
         </div>
       </main>

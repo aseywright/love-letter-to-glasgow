@@ -13,6 +13,8 @@ const coverBtn = document.getElementById("coverBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const bookProgress = document.getElementById("bookProgress");
+const progressFill = document.getElementById("progressFill");
+const closedBook = document.querySelector(".closed-book");
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 // Touch devices turn pages by swipe and zoom a photo by tapping it; pointer
@@ -38,13 +40,45 @@ function isTouch() {
   return coarsePointer.matches;
 }
 
-openBookBtn.addEventListener("click", () => {
+function openBook() {
   heroScreen.classList.add("hidden");
   bookShell.classList.remove("hidden");
 
   if (!hasLoaded) {
     loadImages();
   }
+
+  markActive();
+}
+
+openBookBtn.addEventListener("click", openBook);
+
+if (closedBook) {
+  closedBook.style.cursor = "pointer";
+  closedBook.addEventListener("click", openBook);
+}
+
+// Quiet the navigation chrome while reading; bring it back on any input.
+const IDLE_MS = 3400;
+let idleTimer = null;
+
+function scheduleIdle() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if (!bookShell.classList.contains("hidden")) {
+      bookShell.classList.add("is-immersive");
+    }
+  }, IDLE_MS);
+}
+
+function markActive() {
+  if (bookShell.classList.contains("hidden")) return;
+  bookShell.classList.remove("is-immersive");
+  scheduleIdle();
+}
+
+["pointermove", "pointerdown", "keydown", "touchstart", "wheel"].forEach((eventName) => {
+  window.addEventListener(eventName, markActive, { passive: true });
 });
 
 prevBtn.addEventListener("click", () => navigate(-1));
@@ -160,6 +194,11 @@ function updateControls() {
   nextBtn.disabled = isAnimating || currentIndex >= spreads.length - 1;
   coverBtn.disabled = isAnimating || spreads.length === 0 || currentIndex === 0;
   bookProgress.textContent = progressLabel();
+
+  if (progressFill) {
+    const ratio = spreads.length > 1 ? currentIndex / (spreads.length - 1) : 0;
+    progressFill.style.width = `${ratio * 100}%`;
+  }
 }
 
 function imagePath(file) {
@@ -911,4 +950,20 @@ function loadImages() {
     });
 }
 
+function animateLanding() {
+  if (!window.gsap || prefersReducedMotion.matches) return;
+  if (heroScreen.classList.contains("hidden")) return;
+
+  const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  tl.from(".hero-copy .eyebrow", { y: 14, opacity: 0, duration: 0.7 }, 0.15)
+    .from(".hero-copy h1", { y: 22, opacity: 0, duration: 0.85 }, 0.25)
+    .from(".hero-copy .subtitle", { y: 14, opacity: 0, duration: 0.7 }, 0.45)
+    .from(".hero-actions", { y: 12, opacity: 0, duration: 0.6 }, 0.6)
+    .from(".hero-preview", { opacity: 0, scale: 0.96, duration: 1.05, ease: "power2.out" }, 0.3);
+
+  // Safety: never leave the landing faded if the entrance is interrupted.
+  setTimeout(() => tl.progress(1), 2800);
+}
+
 updateControls();
+animateLanding();
