@@ -561,27 +561,23 @@ function renderCaption(index) {
 
   spreadCaption.hidden = false;
 
-  // The clip reveals each word left-to-right; the generous vertical inset keeps
-  // the script's ascenders and descenders from being clipped.
-  const HIDDEN = "inset(-30% 100% -30% 0)";
-  const SHOWN = "inset(-30% 0% -30% 0)";
-
   if (window.gsap && !prefersReducedMotion.matches) {
     gsap.set(spreadCaption, { opacity: 1 });
-    gsap.set(spans, { clipPath: HIDDEN, webkitClipPath: HIDDEN });
-    const stagger = Math.min(0.085, 1.15 / Math.max(spans.length, 1));
+    gsap.set(spans, { "--reveal": 0 });
+    // Generous overlap (each word still uncovering as the next begins) makes the
+    // line flow on continuously like wet ink rather than wiping word by word.
+    const each = Math.min(0.08, 1.3 / Math.max(spans.length, 1));
     gsap.to(spans, {
-      clipPath: SHOWN,
-      webkitClipPath: SHOWN,
-      duration: 0.42,
-      ease: "power2.out",
-      stagger,
-      delay: 0.18,
+      "--reveal": 1,
+      duration: 0.55,
+      ease: "sine.out",
+      delay: 0.16,
+      stagger: { each, from: 0 },
     });
   } else {
     spreadCaption.style.opacity = "1";
     spans.forEach((span) => {
-      span.style.clipPath = SHOWN;
+      span.style.setProperty("--reveal", "1");
     });
   }
 }
