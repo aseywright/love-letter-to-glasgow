@@ -904,6 +904,7 @@ function createImageFigure(descriptor) {
   img.src = imagePath(descriptor.file);
   img.alt = "Street photograph from Love Letter to Glasgow";
   img.loading = "eager";
+  img.decoding = "async";
   figure.appendChild(img);
 
   // Quiet zoom affordance for pointer devices (touch users tap the photo itself).
@@ -1019,6 +1020,7 @@ function createCoverBlock(descriptor) {
   const image = document.createElement("img");
   image.src = imagePath(descriptor.file);
   image.alt = "Cover image for Love Letter to Glasgow";
+  image.decoding = "async";
   wrapper.appendChild(image);
 
   const grid = document.createElement("div");
@@ -1067,6 +1069,8 @@ function jumpToCover() {
 // image full-screen so detail survives the smaller side-by-side mobile spread.
 let zoomOverlay = null;
 let zoomImg = null;
+let zoomClose = null;
+let zoomReturnFocus = null;
 
 function ensureZoomOverlay() {
   if (zoomOverlay) return;
@@ -1080,19 +1084,28 @@ function ensureZoomOverlay() {
 
   zoomImg = document.createElement("img");
   zoomImg.alt = "Enlarged street photograph from Love Letter to Glasgow";
+  zoomImg.decoding = "async";
   zoomOverlay.appendChild(zoomImg);
 
-  const close = document.createElement("button");
-  close.type = "button";
-  close.className = "zoom-close";
-  close.setAttribute("aria-label", "Close enlarged photograph");
-  close.innerHTML =
+  zoomClose = document.createElement("button");
+  zoomClose.type = "button";
+  zoomClose.className = "zoom-close";
+  zoomClose.setAttribute("aria-label", "Close enlarged photograph");
+  zoomClose.innerHTML =
     '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6 18 18M18 6 6 18"/></svg>';
-  close.addEventListener("click", closeZoom);
-  zoomOverlay.appendChild(close);
+  zoomClose.addEventListener("click", closeZoom);
+  zoomOverlay.appendChild(zoomClose);
 
   zoomOverlay.addEventListener("click", (event) => {
     if (event.target === zoomOverlay) closeZoom();
+  });
+
+  // Trap Tab within the dialog (the close button is the only stop).
+  zoomOverlay.addEventListener("keydown", (event) => {
+    if (event.key === "Tab") {
+      event.preventDefault();
+      zoomClose.focus();
+    }
   });
 
   document.body.appendChild(zoomOverlay);
@@ -1103,10 +1116,14 @@ function openZoom(source) {
   if (!file) return;
 
   ensureZoomOverlay();
+  zoomReturnFocus = document.activeElement;
   zoomImg.src = imagePath(file);
   zoomOverlay.hidden = false;
   document.body.classList.add("zoom-locked");
-  requestAnimationFrame(() => zoomOverlay.classList.add("is-open"));
+  requestAnimationFrame(() => {
+    zoomOverlay.classList.add("is-open");
+    zoomClose.focus(); // move focus into the dialog
+  });
 }
 
 function closeZoom() {
@@ -1114,6 +1131,12 @@ function closeZoom() {
 
   zoomOverlay.classList.remove("is-open");
   document.body.classList.remove("zoom-locked");
+
+  // Return focus to whatever opened the zoom.
+  if (zoomReturnFocus && typeof zoomReturnFocus.focus === "function") {
+    zoomReturnFocus.focus();
+  }
+  zoomReturnFocus = null;
 
   const finish = () => {
     zoomOverlay.hidden = true;

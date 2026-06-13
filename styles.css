@@ -5,7 +5,7 @@
   --bg-soft: #0d0d0d;
   --text: #f1eee8;
   --muted: #b8b1a5;
-  --muted-soft: #7e7a73;
+  --muted-soft: #948f86;
   --paper: #f1ede3;
   --paper-deep: #e5dece;
   --board: #171615;
@@ -40,6 +40,13 @@ button {
 
 .hidden {
   display: none !important;
+}
+
+/* Clear keyboard focus ring on every interactive control. */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid rgba(245, 242, 235, 0.9);
+  outline-offset: 3px;
+  border-radius: 3px;
 }
 
 /* --- Ambient night-light behind everything ----------------------------- */
