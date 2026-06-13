@@ -265,6 +265,106 @@ function webpPath(file) {
   return imagePath(file.replace(/\.(jpe?g)$/i, ".webp"));
 }
 
+// Per-photo alt text: factual one-line descriptions, keyed by image filename.
+// Editable — add or refine any line here. Anything missing falls back to a
+// generic line.
+const ALT = {
+  "Cover.jpg": "A man's silhouette in a doorway at night beneath an illuminated 四海樓 Licensed Restaurant sign, a lit staircase behind him.",
+  "IMG_E9363.JPG": "A man in a fedora and striped scarf talks on a phone on the pavement, a rolled carpet leaning beside him.",
+  "24B06320-A44F-4265-92A2-F1A8B89FCF0C-9337-0000022AB6BD89F8.jpg":
+    "Two men in coats walk past the bronze Duke of Wellington statue on horseback, mirrored in a wet puddle on a city square.",
+  "IMG_3196.jpg":
+    "A taxi driver sits in his cab at night, hand to his face, beside a shop window glowing with a neon 'Sale' sign and Christmas lights.",
+  "IMG_3211.jpg": "Blurred figures and shop signage reflected in dark blue night glass.",
+  "IMG_7306 (2).jpg": "A double-exposed black-and-white image of fern fronds layered over a faint figure.",
+  "Zine2021-05-03 at 1.03.40 pm 88.jpg": "A woman in a long dress stands alone on a grass clearing ringed by dark trees.",
+  "Zine2021-05-03 at 1.04.09 pm 74.jpg":
+    "A bearded man in glasses sits behind a rain-streaked cafe window, umbrellas and a tenement reflected in the glass.",
+  "Zine2021-05-03 at 1.04.21 pm 33.jpg": "An abstract close-up of a face seen through rippled, multicoloured mottled glass.",
+  "Zine2021-05-03 at 1.04.27 pm 84.jpg":
+    "From behind, a person in a fluffy white coat and beret walks a dusk street past a 'Don't Settle' vending pillar.",
+  "Zine2021-05-03 at 4.00.54 pm 20.jpg": "A lone cyclist rides through a long curved tubular covered walkway, city buildings beyond.",
+  "Zine2021-05-03 at 4.00.58 pm 29.jpg":
+    "From behind, a woman in a long coat walks down a sloping street lined with scaffolding and tenements.",
+  "Zine2021-05-03 at 4.01.01 pm 45.jpg": "Abstract view of curving concrete balcony tiers inside an atrium.",
+  "Zine2021-05-03 at 4.01.03 pm 12.jpg":
+    "A night street with neon tattoo-parlour and convenience-store signs, an orange car parked and a red bus blurring past.",
+  "Zine2021-05-03 at 4.01.06 pm 25.jpg": "A silhouetted cyclist rides past the lit Queen Street station entrance at night, a pedestrian nearby.",
+  "Zine2021-05-03 at 4.01.08 pm 87.jpg": "A wet city street at night, a figure crossing toward distant headlights below a lit office building.",
+  "Zine2021-05-03 at 4.01.21 pm 86.jpg": "A man's face framed in the hatch of a 'Falafel to Go' takeaway, shelves of cans and bags inside.",
+  "Zine2021-05-03 at 4.01.25 pm 65.jpg": "From behind, a man in a grey coat faces Central Station and a lit Tim Hortons at night.",
+  "Zine2021-05-03 at 4.01.30 pm 110.jpg": "A bespectacled man in a dark coat exhales a large cloud of vapour against a graffitied doorway.",
+  "Zine2021-05-03 at 4.10.40 pm 56.jpg": "An older man and a woman pull scarves over their faces against the cold on a grey street.",
+  "Zine2021-05-03 at 4.10.53 pm 30.jpg": "A man sits alone at a table behind a cafe window, tenements reflected in the glass.",
+  "Zine2021-05-03 at 4.11.05 pm 29.jpg": "A man with a satchel walks past shuttered shopfronts in a shaft of light, graffiti on the wall.",
+  "Zine2021-05-03 at 4.11.14 pm 37.jpg": "A small silhouetted figure crosses a sunlit corner between tall stone buildings casting long shadows.",
+  "Zine2021-05-03 at 4.11.15 pm 108.jpg": "An older man in a puffer jacket walks past a concrete wall cut by a sharp diagonal shaft of light.",
+  "Zine2021-05-03 at 4.11.15 pm 43.jpg": "A busy daytime pavement by columned buildings; two stylish young women pass, one in sunglasses.",
+  "Zine2021-05-03 at 4.11.29 pm 5.jpg": "A man in a pale hat and suit, face in shadow, passes the 四海樓 Licensed Restaurant doorway by day.",
+  "Zine2021-05-03 at 4.11.34 pm 22.jpg": "An elderly woman in a headscarf and dark coat walks toward the camera through a city crossing, Pizza Hut behind.",
+  "Zine2021-05-03 at 4.11.37 pm 100.jpg": "Two silhouetted men, one pointing, before a bright hoarding with a demolition excavator behind.",
+  "Zine2021-05-03 at 4.11.37 pm 50.jpg": "A driver's hand rests out the window of a white lorry cab with large wing mirrors, scaffolding behind.",
+  "Zine2021-05-03 at 4.11.53 pm 94.jpg": "Through a cafe window, a man and a blond woman sit talking; handwritten 'Joy / Ride' notes on the frame.",
+  "Zine2021-05-03 at 4.18.27 pm 88.jpg": "From behind, a person jogs along a lush fern-lined garden path.",
+  "Zine2021-05-03 at 4.18.28 pm 109.jpg": "An African grocery stall with bundles of sugar cane and brooms, a man behind the counter.",
+  "Zine2021-05-03 at 4.18.30 pm 4.jpg": "Inside the Athol Arms pub, an older man sits with a pint in window light, other drinkers nearby.",
+  "Zine2021-05-03 at 4.18.33 pm 48.jpg": "Two hi-vis workers, one pointing up, on a street toward the City Chambers domes at dusk.",
+  "Zine2021-05-03 at 4.18.37 pm 26.jpg": "Overhead, a cyclist rides a path beside a zig-zag staircase and river in dappled light.",
+  "Zine2021-05-03 at 4.18.52 pm 73.jpg": "A sunlit colonnade throws strong rectangular shadows across paving, a distant figure beyond.",
+  "Zine2021-05-03 at 4.18.53 pm 100.jpg": "A street preacher holds an 'Evolution is a Hoax' sign before a crowd of young people outside a station.",
+  "Zine2021-05-03 at 4.18.53 pm 54.jpg": "A girl in profile silhouette rides an escalator against the shadow of a large arched window.",
+  "Zine2021-05-03 at 4.18.54 pm 54.jpg": "A young tattooed woman in sunglasses sits amid a standing crowd, a heavily tattooed arm in the foreground.",
+  "Zine2021-05-03 at 4.18.56 pm 44_01.jpg": "A man holds a bunch of large clear confetti-filled balloons on a street at dusk.",
+  "Zine2021-05-03 at 4.23.18 pm 9.jpg": "Two people under a clear umbrella on a rainy lit street by the Rogano sign and a lobster mural.",
+  "Zine2021-05-03 at 4.25.23 pm 80.jpg": "A white-haired man reads a newspaper in a cluttered bric-a-brac shop with a deer's head and old Esso sign.",
+  "Zine2021-05-03 at 4.25.31 pm 10.jpg": "A bearded man in a tweed coat walks in profile along a granite wall in sharp diagonal light.",
+  "Zine2021-05-03 at 4.25.31 pm 94_01.jpg": "A suited man emerges from billowing street steam in a lane, his long shadow on a metal grate.",
+  "Zine2021-05-03 at 4.25.32 pm 109.jpg": "A man with wild hair and glasses pushed up talks on a phone outside a 'USA Beauty' barbers, strongly backlit.",
+  "Zine2021-05-03 at 4.49.52 pm 63.jpg": "From behind, a man in a black beret and grey coat on a sunlit street, another man beside him.",
+  "Zine2021-05-03 at 4.49.52 pm 90.jpg": "A grey-haired man in a tan coat passes a dark graffitied wall pasted with three portrait photos.",
+  "Zine2021-05-03 at 4.49.57 pm 35.jpg": "Three firefighters in turnout gear on a street, one pointing, by a KFC frontage.",
+  "Zine2021-05-03 at 4.50.02 pm 104_01.jpg": "An abstract figure with orange hair in a blue top seen through textured frosted glass.",
+  "Zine2021-05-03 at 4.50.06 pm 27.jpg": "A briefcase-carrying man passes a stencil mural of a suited caveman holding a spear.",
+  "DSHD1327.JPG": "A hazy, light-leaked street scene: a grey-haired man in a suit among shoppers past a Nike store and a pink 'Make Glasgow' banner.",
+  "IMG_0869 (2).JPG": "A top-down night view of a person walking past Bank of Scotland and St Vincent Street signage, casting a long shadow.",
+  "IMG_E3709.JPG": "From behind, a suited man on a phone at a sunlit street corner by a 'Coffee' sign, a black car passing.",
+  "IMG_E8133.JPG": "A smiling baker in a hairnet and flour-dusted apron, seen in profile.",
+  "IMG_E9063.JPG": "A bearded man in a suit reflected in a shop window, tenements mirrored in the glass.",
+  "RNZVE0015.JPG": "A red neon 'Open' sign glowing at the top of a dim, red-lit stairwell.",
+  "inside cover.JPG": "A blurred night reflection in shop glass of the photographer raising a camera, shoppers around him.",
+  "img003.jpg": "The Glasgow Film Theatre frontage with its lit marquee, a couple passing and a figure heading in.",
+  "img005.jpg": "A balloon seller almost hidden behind a huge bunch of colourful character balloons in a sunlit square.",
+  "img009.jpg": "An older woman in a red coat posts a letter at a red pillar box, a patchwork bag on her arm.",
+  "img030-2.jpg": "A soft out-of-focus street scene framed by a red shopfront edge and a patterned curtain.",
+  "img040-2.jpg": "A male mannequin torso with a keyhole in its shoulder sits in a shop window among cardboard boxes.",
+  "img070-2.jpg": "A blond woman with a handbag stands among the tall stone columns of a grand portico.",
+  "img076-2.jpg": "A pale-haired woman in a long red coat walks toward the camera on a wet street at dusk.",
+  "img077.jpg": "An older couple walk arm in arm beneath a lit 'Arcade & Bingo' neon marquee at dusk.",
+  "img082_01.jpg": "Two women on a wet night pavement beneath a red subway sign, brake lights and tower blocks beyond.",
+  "img083.jpg": "Two people walk onto a foggy stone suspension bridge with a tall triumphal-arch pylon.",
+  "img085.jpg": "The Duke of Wellington statue from behind, a traffic cone on its head and someone climbing it, a bus passing.",
+  "img127-2.jpg": "A misty river, weir and old mill framed between two blurred stone balusters.",
+  "img139-2-2.jpg": "A double-breasted coat on a headless mannequin in a shop window, a domed building reflected.",
+  "img235.jpg": "A lone figure walks away down a dim Victorian shopping arcade lit by hanging lamps.",
+  "img244.jpg": "A heavy-set man in a coat sharp in the foreground at night, a crowd and street lights blurred behind.",
+  "img248.jpg": "From behind, a person in a checked coat under an umbrella on a rainy night street, lights blurred.",
+  "img259.jpg": "An older man stands in profile in a square before a robed statue and tenements.",
+  "img315.jpg": "An old man stands dwarfed among the massive stone columns of a grand portico.",
+  "img366.jpg": "The shadow of a figure cast on a striped construction tarpaulin, a 'Barras' sign behind.",
+  "img410.jpg": "A person's shadow falls across a shopfront, forming a cross shape in the daylight.",
+  "img521.jpg": "Inside a glasshouse: tall palms under a curved glass roof, a small figure on a path below.",
+  "img524.jpg": "Two men stand close to a stone wall with a small scruffy white dog beside them.",
+  "img537.jpg": "A person bundled against the cold sits on a park bench in the snow, a pigeon nearby.",
+  "img716.jpg": "A person reflected in shop glass layered with arcade reflections, another figure in a red scarf beyond.",
+  "img726.jpg": "People walk through a sun-flared stone archway into the Merchant City, reduced to silhouettes.",
+  "img840.jpg": "A close-up of bright neon signage with stars and lettering in red, yellow and blue.",
+  "img846_01.jpg": "A woman in a pale coat walks a dark night lane lit by neon signs.",
+};
+
+function altFor(file) {
+  return ALT[file] || "Street photograph from Love Letter to Glasgow, Glasgow 2017–2019";
+}
+
 function isSameFile(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
 }
@@ -914,7 +1014,7 @@ function createImageFigure(descriptor) {
 
   const img = document.createElement("img");
   img.src = imagePath(descriptor.file);
-  img.alt = "Street photograph from Love Letter to Glasgow";
+  img.alt = altFor(descriptor.file);
   img.loading = "eager";
   img.decoding = "async";
   picture.appendChild(img);
@@ -1038,7 +1138,7 @@ function createCoverBlock(descriptor) {
   coverPicture.appendChild(coverSource);
 
   image.src = imagePath(descriptor.file);
-  image.alt = "Cover image for Love Letter to Glasgow";
+  image.alt = altFor(descriptor.file);
   image.decoding = "async";
   coverPicture.appendChild(image);
   wrapper.appendChild(coverPicture);
@@ -1138,6 +1238,7 @@ function openZoom(source) {
   ensureZoomOverlay();
   zoomReturnFocus = document.activeElement;
   zoomImg.src = imagePath(file);
+  zoomImg.alt = altFor(file);
   zoomOverlay.hidden = false;
   document.body.classList.add("zoom-locked");
   requestAnimationFrame(() => {
