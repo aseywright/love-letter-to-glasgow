@@ -1168,5 +1168,50 @@ function animateLanding() {
   setTimeout(() => tl.progress(1), 2800);
 }
 
+// Drifting night-glows + the occasional passing headlight, behind the book.
+function initAmbient() {
+  const layer = document.getElementById("ambient");
+  if (!layer || !window.gsap || prefersReducedMotion.matches) return; // static glows otherwise
+
+  const rand = gsap.utils.random;
+
+  layer.querySelectorAll(".orb").forEach((orb) => {
+    gsap.to(orb, {
+      x: () => rand(-140, 140),
+      y: () => rand(-90, 90),
+      scale: () => rand(0.82, 1.28),
+      duration: () => rand(18, 34),
+      ease: "sine.inOut",
+      repeat: -1,
+      yoyo: true,
+      delay: rand(0, 8),
+    });
+  });
+
+  const sweep = (streak) => {
+    const fromLeft = Math.random() > 0.5;
+    const w = window.innerWidth;
+    gsap.set(streak, {
+      top: rand(12, 88) + "vh",
+      x: fromLeft ? -w * 0.4 : w * 1.4,
+      scaleX: fromLeft ? 1 : -1,
+      opacity: 0,
+    });
+    const tl = gsap.timeline({
+      onComplete: () => gsap.delayedCall(rand(5, 12), () => sweep(streak)),
+    });
+    const peak = rand(0.22, 0.42);
+    const duration = rand(2.6, 4.4);
+    tl.to(streak, { x: fromLeft ? w * 1.4 : -w * 0.4, duration, ease: "power1.inOut" }, 0)
+      .to(streak, { opacity: peak, duration: duration * 0.35, ease: "power1.in" }, 0)
+      .to(streak, { opacity: 0, duration: duration * 0.4, ease: "power1.out" }, duration * 0.6);
+  };
+
+  layer.querySelectorAll(".headlight").forEach((streak, i) => {
+    gsap.delayedCall(2 + i * 4 + rand(0, 3), () => sweep(streak));
+  });
+}
+
 updateControls();
 animateLanding();
+initAmbient();

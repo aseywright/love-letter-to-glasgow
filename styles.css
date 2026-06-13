@@ -42,8 +42,91 @@ button {
   display: none !important;
 }
 
+/* --- Ambient night-light behind everything ----------------------------- */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orb,
+.headlight {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+/* Soft drifting glows — street lamps, neon, the wet-night palette. */
+.orb {
+  width: 42vmax;
+  height: 42vmax;
+}
+
+.orb-1 {
+  top: -14vmax;
+  left: -10vmax;
+  opacity: 0.22;
+  background: radial-gradient(circle, rgba(232, 170, 92, 0.55), transparent 68%); /* sodium amber */
+}
+
+.orb-2 {
+  bottom: -18vmax;
+  right: -12vmax;
+  width: 50vmax;
+  height: 50vmax;
+  opacity: 0.18;
+  background: radial-gradient(circle, rgba(150, 196, 255, 0.5), transparent 68%); /* cool headlight */
+}
+
+.orb-3 {
+  top: 30vh;
+  right: 4vw;
+  width: 30vmax;
+  height: 30vmax;
+  opacity: 0.14;
+  background: radial-gradient(circle, rgba(120, 206, 190, 0.45), transparent 70%); /* faint shop-sign teal */
+}
+
+.orb-4 {
+  bottom: 6vh;
+  left: 8vw;
+  width: 26vmax;
+  height: 26vmax;
+  opacity: 0.13;
+  background: radial-gradient(circle, rgba(228, 96, 84, 0.42), transparent 70%); /* distant brake/neon red */
+}
+
+.orb-5 {
+  top: 8vh;
+  left: 40vw;
+  width: 34vmax;
+  height: 34vmax;
+  opacity: 0.12;
+  background: radial-gradient(circle, rgba(244, 232, 210, 0.45), transparent 70%); /* warm white */
+}
+
+/* The passing headlight: a soft elongated sweep, animated across by JS. */
+.headlight {
+  top: 50vh;
+  left: 0;
+  width: 46vmax;
+  height: 11vmax;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 244, 224, 0.5), transparent 64%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headlight {
+    display: none;
+  }
+}
+
 .page-shell {
   position: relative;
+  z-index: 1;
   display: grid;
   min-height: 100vh;
   min-height: 100dvh;
