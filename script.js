@@ -326,7 +326,7 @@ const ALT = {
   "Zine2021-05-03 at 4.50.02 pm 104_01.jpg": "An abstract figure with orange hair in a blue top seen through textured frosted glass.",
   "Zine2021-05-03 at 4.50.06 pm 27.jpg": "A briefcase-carrying man passes a stencil mural of a suited caveman holding a spear.",
   "DSHD1327.JPG": "A hazy, light-leaked street scene: a grey-haired man in a suit among shoppers past a Nike store and a pink 'Make Glasgow' banner.",
-  "IMG_0869 (2).JPG": "A top-down night view of a person walking past Bank of Scotland and St Vincent Street signage, casting a long shadow.",
+  "IMG_0869 (2).JPG": "A man with a backpack walks past the lit Bank of Scotland corner and 'St Vincent Street' sign at night, casting a long shadow.",
   "IMG_E3709.JPG": "From behind, a suited man on a phone at a sunlit street corner by a 'Coffee' sign, a black car passing.",
   "IMG_E8133.JPG": "A smiling baker in a hairnet and flour-dusted apron, seen in profile.",
   "IMG_E9063.JPG": "A bearded man in a suit reflected in a shop window, tenements mirrored in the glass.",
