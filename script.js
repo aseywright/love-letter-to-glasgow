@@ -259,6 +259,12 @@ function imagePath(file) {
   return `Images/${file.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+// Display-sized WebP companion (see scripts/make-webp.py); the JPEG stays as the
+// <img> fallback and the full-detail zoom source.
+function webpPath(file) {
+  return imagePath(file.replace(/\.(jpe?g)$/i, ".webp"));
+}
+
 function isSameFile(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
 }
@@ -900,12 +906,19 @@ function createImageFigure(descriptor) {
     figure.classList.add("is-bleed", `bleed-${descriptor.bleedHalf}`);
   }
 
+  const picture = document.createElement("picture");
+  const source = document.createElement("source");
+  source.type = "image/webp";
+  source.srcset = webpPath(descriptor.file);
+  picture.appendChild(source);
+
   const img = document.createElement("img");
   img.src = imagePath(descriptor.file);
   img.alt = "Street photograph from Love Letter to Glasgow";
   img.loading = "eager";
   img.decoding = "async";
-  figure.appendChild(img);
+  picture.appendChild(img);
+  figure.appendChild(picture);
 
   // Quiet zoom affordance for pointer devices (touch users tap the photo itself).
   const zoomBtn = document.createElement("button");
@@ -1018,10 +1031,17 @@ function createCoverBlock(descriptor) {
   wrapper.className = "cover-frame";
 
   const image = document.createElement("img");
+  const coverPicture = document.createElement("picture");
+  const coverSource = document.createElement("source");
+  coverSource.type = "image/webp";
+  coverSource.srcset = webpPath(descriptor.file);
+  coverPicture.appendChild(coverSource);
+
   image.src = imagePath(descriptor.file);
   image.alt = "Cover image for Love Letter to Glasgow";
   image.decoding = "async";
-  wrapper.appendChild(image);
+  coverPicture.appendChild(image);
+  wrapper.appendChild(coverPicture);
 
   const grid = document.createElement("div");
   grid.className = "cover-grid";
