@@ -537,59 +537,155 @@ function renderSpread(spread) {
   renderCaption(currentIndex);
 }
 
+/* --- Narrative caption: a hand-written line (Shadows Into Light) that writes
+   itself in beneath the book after each page turn — off the photographs, in the
+   dark negative space. Each visual line is uncovered by a soft left-to-right
+   mask at handwriting pace. A monotonic token guards every async step so only
+   the current page's line is ever live, even across rapid or backwards turns. */
+const captionPara = spreadCaption.querySelector("p");
+const CAPTION_SETTLE_MS = 260; // brief pause after the page settles before writing
+
+let captionToken = 0;
+let captionTimeline = null;
+let captionStartTimer = null;
+let captionResizeTimer = null;
+let currentCaptionLine = "";
+
+function clearCaptionAnims() {
+  clearTimeout(captionStartTimer);
+  captionStartTimer = null;
+  if (captionTimeline) {
+    captionTimeline.kill();
+    captionTimeline = null;
+  }
+  if (window.gsap) gsap.killTweensOf([spreadCaption, captionPara]);
+}
+
 function renderCaption(index) {
   const line = NARRATIVE[index] || "";
-  const para = spreadCaption.querySelector("p");
+  const token = ++captionToken;
+  clearCaptionAnims();
+  currentCaptionLine = line;
 
   if (!line) {
     spreadCaption.hidden = true;
-    para.textContent = "";
+    captionPara.textContent = "";
     return;
   }
 
-  // One inline-block span per word, with real spaces between so it still wraps.
-  para.textContent = "";
-  const words = line.split(" ");
-  const spans = words.map((word, i) => {
-    const span = document.createElement("span");
-    span.className = "cap-word";
-    span.textContent = word;
-    para.appendChild(span);
-    if (i < words.length - 1) para.appendChild(document.createTextNode(" "));
-    return span;
-  });
-
   spreadCaption.hidden = false;
+  captionPara.textContent = "";
 
-  if (window.gsap && !prefersReducedMotion.matches) {
-    gsap.set(spreadCaption, { opacity: 1 });
-    gsap.set(spans, { "--reveal": 0 });
-    // Generous overlap (each word still uncovering as the next begins) makes the
-    // line flow on continuously like wet ink rather than wiping word by word.
-    const each = Math.min(0.08, 1.3 / Math.max(spans.length, 1));
-    gsap.to(spans, {
-      "--reveal": 1,
-      duration: 0.55,
-      ease: "sine.out",
-      delay: 0.16,
-      stagger: { each, from: 0 },
-    });
+  if (!window.gsap) {
+    drawCaption(line, token);
+    return;
+  }
+
+  // Stay invisible through the settle pause, then write.
+  gsap.set(spreadCaption, { opacity: 0 });
+  captionStartTimer = setTimeout(() => {
+    if (token !== captionToken) return;
+    drawCaption(line, token);
+  }, CAPTION_SETTLE_MS);
+}
+
+function drawCaption(line) {
+  if (prefersReducedMotion.matches || !window.gsap) {
+    showCaptionStatic(line);
   } else {
-    spreadCaption.style.opacity = "1";
-    spans.forEach((span) => {
-      span.style.setProperty("--reveal", "1");
-    });
+    drawCaptionMask(line);
   }
 }
 
 function hideCaption() {
+  clearCaptionAnims();
   if (window.gsap) {
-    gsap.killTweensOf(spreadCaption);
-    gsap.set(spreadCaption, { opacity: 0 });
+    gsap.to(spreadCaption, { opacity: 0, duration: 0.28, overwrite: true });
   } else {
     spreadCaption.style.opacity = "0";
   }
 }
+
+// Reduced-motion / no-GSAP: just fade the whole line in, no drawing.
+function showCaptionStatic(line) {
+  captionPara.textContent = line;
+  if (window.gsap) {
+    gsap.fromTo(spreadCaption, { opacity: 0 }, { opacity: 1, duration: 0.6, overwrite: true });
+  } else {
+    spreadCaption.style.opacity = "1";
+  }
+}
+
+// Soft per-line left-to-right reveal of the handwriting.
+function drawCaptionMask(line) {
+  gsap.set(spreadCaption, { opacity: 1 });
+
+  // Lay the line out as words to discover where it naturally wraps.
+  captionPara.textContent = "";
+  const words = line.split(" ");
+  const wordSpans = words.map((word, i) => {
+    const span = document.createElement("span");
+    span.className = "cap-word";
+    span.textContent = word;
+    captionPara.appendChild(span);
+    if (i < words.length - 1) captionPara.appendChild(document.createTextNode(" "));
+    return span;
+  });
+
+  // Group words into visual lines, then re-wrap each line so its mask sweeps
+  // across just that line's text.
+  const groups = [];
+  let lastTop = null;
+  wordSpans.forEach((span) => {
+    const top = span.offsetTop;
+    if (top !== lastTop) {
+      groups.push([]);
+      lastTop = top;
+    }
+    groups[groups.length - 1].push(span);
+  });
+
+  captionPara.textContent = "";
+  const lineDivs = groups.map((group, gi) => {
+    const div = document.createElement("div");
+    div.className = "cap-line";
+    group.forEach((span, i) => {
+      div.appendChild(span);
+      if (i < group.length - 1) div.appendChild(document.createTextNode(" "));
+    });
+    captionPara.appendChild(div);
+    // A space between line blocks keeps the text correct for copy / screen
+    // readers (it does not affect the visual line break).
+    if (gi < groups.length - 1) captionPara.appendChild(document.createTextNode(" "));
+    return div;
+  });
+
+  // Reveal each visual line in turn, left to right, at handwriting pace.
+  gsap.set(lineDivs, { "--reveal": 0, opacity: 0.45 });
+  const tl = gsap.timeline();
+  lineDivs.forEach((div, i) => {
+    const chars = div.textContent.length;
+    const duration = Math.min(2.4, Math.max(0.45, chars * 0.03));
+    tl.to(div, { opacity: 1, duration: duration * 0.5, ease: "none" }, i === 0 ? 0 : ">-0.1");
+    tl.to(div, { "--reveal": 1, duration, ease: "none" }, "<");
+  });
+  captionTimeline = tl;
+}
+
+// Reflow the current line on resize / orientation change (debounced), without
+// the settle pause — just redraw it for the new width.
+function handleCaptionResize() {
+  clearTimeout(captionResizeTimer);
+  captionResizeTimer = setTimeout(() => {
+    if (spreadCaption.hidden || !currentCaptionLine) return;
+    ++captionToken;
+    clearCaptionAnims();
+    drawCaption(currentCaptionLine);
+  }, 220);
+}
+
+window.addEventListener("resize", handleCaptionResize);
+window.addEventListener("orientationchange", handleCaptionResize);
 
 // Warm the browser cache for nearby spreads so a turn never reveals a load gap.
 const preloadedFiles = new Set();
