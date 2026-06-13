@@ -118,6 +118,13 @@ button {
   background: radial-gradient(ellipse at center, rgba(255, 244, 224, 0.5), transparent 64%);
 }
 
+/* A red tail-light pass — smaller, dimmer, and always one direction. */
+.headlight.is-tail {
+  width: 34vmax;
+  height: 9vmax;
+  background: radial-gradient(ellipse at center, rgba(236, 66, 58, 0.5), transparent 62%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .headlight {
     display: none;

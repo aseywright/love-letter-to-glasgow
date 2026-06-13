@@ -1189,7 +1189,11 @@ function initAmbient() {
   });
 
   const sweep = (streak) => {
-    const fromLeft = Math.random() > 0.5;
+    // Roughly one pass in three is a red tail-light; tail-lights always travel
+    // the same direction (a car receding), headlights either way.
+    const isTail = Math.random() < 0.33;
+    streak.classList.toggle("is-tail", isTail);
+    const fromLeft = isTail ? true : Math.random() > 0.5;
     const w = window.innerWidth;
     gsap.set(streak, {
       top: rand(12, 88) + "vh",
@@ -1200,7 +1204,7 @@ function initAmbient() {
     const tl = gsap.timeline({
       onComplete: () => gsap.delayedCall(rand(5, 12), () => sweep(streak)),
     });
-    const peak = rand(0.22, 0.42);
+    const peak = isTail ? rand(0.16, 0.3) : rand(0.22, 0.42);
     const duration = rand(2.6, 4.4);
     tl.to(streak, { x: fromLeft ? w * 1.4 : -w * 0.4, duration, ease: "power1.inOut" }, 0)
       .to(streak, { opacity: peak, duration: duration * 0.35, ease: "power1.in" }, 0)
