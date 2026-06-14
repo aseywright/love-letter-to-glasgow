@@ -365,7 +365,7 @@ h1 {
   /* Vertical space reserved for the title bar, the narrative caption beneath
      the book, the controls and shell padding. One formula sizes the book at
      every width; on portrait phones it resolves to a fit-to-width spread. */
-  --chrome: 322px;
+  --chrome: 355px;
   position: relative;
   width: min(1180px, 100%, calc((100dvh - var(--chrome)) * 1.58));
   margin: 0 auto;
@@ -1066,8 +1066,10 @@ h1 {
   text-align: center;
   width: min(46rem, 90%);
   margin: 0 auto;
-  /* Reserve room so the book doesn't resize as lines wrap between spreads. */
-  min-height: clamp(3.6rem, 9vh, 5.4rem);
+  /* Reserve room so the book doesn't resize as lines wrap between spreads.
+     3 lines at max font (2.1rem × 1.42 lh = ~3rem/line → ~9rem for 3 lines). */
+  min-height: clamp(4.8rem, 13vh, 9.2rem);
+  padding-bottom: 0.3rem;
   pointer-events: none;
 }
 
