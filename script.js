@@ -26,7 +26,7 @@ const NARRATIVE = [
   "By day it dresses well and walks in step, sure of itself, giving nothing away.",
   "Now and then it forgets to perform. A kid bolts through the spray and the whole place softens.",
   "Mostly it just moves: glass and small change and faces you'll never place.",
-  "Dark by four, and still I kept walking, past lit windows and the long way down the hill.",
+  "Dark by four; I kept walking, past lit windows and people who hadn't gone home.",
   "A few blocks down the road a gap opens: a look, a gesture, and the street lets you in.",
   "After that it picks up, everything in motion, and me moving with it.",
   "I see it through glass and rain, soft at the edges, half-dreamed.",
