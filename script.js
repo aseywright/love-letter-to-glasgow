@@ -1127,9 +1127,25 @@ function resolveImagePadding(margin, bleedHalf) {
 }
 
 function createCoverBlock(descriptor) {
+  // A cloth hardback: the photograph is a tipped-in plate (a mounted print)
+  // pasted onto the woven board, with a foil-stamped title above it.
   const wrapper = document.createElement("div");
   wrapper.className = "cover-frame";
 
+  const spine = document.createElement("div");
+  spine.className = "cover-spine";
+  wrapper.appendChild(spine);
+
+  const tape = document.createElement("div");
+  tape.className = "cover-tape";
+  tape.innerHTML = `
+    <span class="cover-tape-title">${descriptor.title}</span>
+    <span class="cover-tape-note">${descriptor.note}</span>
+  `;
+  wrapper.appendChild(tape);
+
+  const plate = document.createElement("div");
+  plate.className = "cover-plate";
   const image = document.createElement("img");
   const coverPicture = document.createElement("picture");
   const coverSource = document.createElement("source");
@@ -1141,36 +1157,13 @@ function createCoverBlock(descriptor) {
   image.alt = altFor(descriptor.file);
   image.decoding = "async";
   coverPicture.appendChild(image);
-  wrapper.appendChild(coverPicture);
-
-  const grid = document.createElement("div");
-  grid.className = "cover-grid";
-  wrapper.appendChild(grid);
-
-  const imageFrame = document.createElement("div");
-  imageFrame.className = "cover-image-frame";
-  wrapper.appendChild(imageFrame);
-
-  const tape = document.createElement("div");
-  tape.className = "cover-tape";
-  tape.innerHTML = `
-    <span class="cover-tape-title">${descriptor.title}</span>
-    <span class="cover-tape-note">${descriptor.note}</span>
-  `;
-  wrapper.appendChild(tape);
+  plate.appendChild(coverPicture);
+  wrapper.appendChild(plate);
 
   const spineNote = document.createElement("div");
   spineNote.className = "cover-spine-note";
   spineNote.textContent = "For Fern";
   wrapper.appendChild(spineNote);
-
-  const hinge = document.createElement("div");
-  hinge.className = "cover-hinge-shadow";
-  wrapper.appendChild(hinge);
-
-  const vignette = document.createElement("div");
-  vignette.className = "cover-vignette";
-  wrapper.appendChild(vignette);
 
   return wrapper;
 }
