@@ -284,8 +284,8 @@ h1 {
 
 .closed-book-spine {
   position: absolute;
-  inset: 3% auto 3% -4%;
-  width: 14%;
+  inset: 3% auto 3% 0;
+  width: 10%;
   border-radius: 16px 6px 6px 16px;
   background: var(--cloth);
   background-color: #14100c;
@@ -414,8 +414,8 @@ h1 {
    open pages — warm paper striations with a soft top-light, not a barcode. */
 .page-stack {
   position: absolute;
-  top: 18px;
-  bottom: 18px;
+  top: 24px;
+  bottom: 24px;
   width: calc(50% - (var(--gutter) / 2));
   pointer-events: none;
   border-radius: 2px;
@@ -431,12 +431,12 @@ h1 {
       rgba(176, 164, 142, 0.55) 1.6px
     ),
     linear-gradient(180deg, #ece3d0 0%, #d7cab0 100%);
-  opacity: 0.92;
+  opacity: 0.4;
 }
 
 .page-stack-left {
   left: 0;
-  transform: translate(-2px, 2px);
+  transform: translate(-1px, 1px);
   border-radius: 2px 1px 1px 2px;
   /* fore-edge on the left: shade toward the spine (right), light on the rim */
   background-image:
@@ -451,13 +451,13 @@ h1 {
     linear-gradient(90deg, #efe6d3 0%, #cdbfa3 100%),
     linear-gradient(180deg, #ece3d0 0%, #d7cab0 100%);
   box-shadow:
-    -4px 6px 13px rgba(0, 0, 0, 0.22),
-    inset -1px 0 2px rgba(0, 0, 0, 0.18);
+    -2px 4px 8px rgba(0, 0, 0, 0.16),
+    inset -1px 0 1px rgba(0, 0, 0, 0.12);
 }
 
 .page-stack-right {
   right: 0;
-  transform: translate(2px, 2px);
+  transform: translate(1px, 1px);
   border-radius: 1px 2px 2px 1px;
   /* fore-edge on the right: shade toward the spine (left), light on the rim */
   background-image:
@@ -472,8 +472,8 @@ h1 {
     linear-gradient(90deg, #cdbfa3 0%, #efe6d3 100%),
     linear-gradient(180deg, #ece3d0 0%, #d7cab0 100%);
   box-shadow:
-    4px 6px 13px rgba(0, 0, 0, 0.22),
-    inset 1px 0 2px rgba(0, 0, 0, 0.18);
+    2px 4px 8px rgba(0, 0, 0, 0.16),
+    inset 1px 0 1px rgba(0, 0, 0, 0.12);
 }
 
 /* Centre gutter: a soft shadow where the pages dip into the spine. Sits above
@@ -1101,6 +1101,7 @@ h1 {
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
+  padding-right: 0.3em;
   --reveal: 1;
   -webkit-mask-image: linear-gradient(
     90deg,
