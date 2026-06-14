@@ -378,7 +378,7 @@ h1 {
      subtle board bevel, the cloth "square" peeking around the page block. */
   position: absolute;
   inset: 0;
-  padding: clamp(12px, 1.5vw, 20px);
+  padding: clamp(5px, 0.7vw, 10px);
   border-radius: 4px 5px 5px 4px;
   background: var(--cloth);
   background-color: #14100c;
@@ -396,7 +396,7 @@ h1 {
 .book-board::before {
   content: "";
   position: absolute;
-  inset: 4px;
+  inset: 2px;
   border-radius: 3px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -436,7 +436,7 @@ h1 {
 
 .page-stack-left {
   left: 0;
-  transform: translate(-4px, 3px);
+  transform: translate(-2px, 2px);
   border-radius: 2px 1px 1px 2px;
   /* fore-edge on the left: shade toward the spine (right), light on the rim */
   background-image:
@@ -451,13 +451,13 @@ h1 {
     linear-gradient(90deg, #efe6d3 0%, #cdbfa3 100%),
     linear-gradient(180deg, #ece3d0 0%, #d7cab0 100%);
   box-shadow:
-    -7px 9px 18px rgba(0, 0, 0, 0.26),
+    -4px 6px 13px rgba(0, 0, 0, 0.22),
     inset -1px 0 2px rgba(0, 0, 0, 0.18);
 }
 
 .page-stack-right {
   right: 0;
-  transform: translate(4px, 3px);
+  transform: translate(2px, 2px);
   border-radius: 1px 2px 2px 1px;
   /* fore-edge on the right: shade toward the spine (left), light on the rim */
   background-image:
@@ -472,7 +472,7 @@ h1 {
     linear-gradient(90deg, #cdbfa3 0%, #efe6d3 100%),
     linear-gradient(180deg, #ece3d0 0%, #d7cab0 100%);
   box-shadow:
-    7px 9px 18px rgba(0, 0, 0, 0.26),
+    4px 6px 13px rgba(0, 0, 0, 0.22),
     inset 1px 0 2px rgba(0, 0, 0, 0.18);
 }
 
@@ -735,7 +735,9 @@ h1 {
 }
 
 .page-content-cover {
-  padding: 14px;
+  /* The cloth cover-frame is the board itself, so it fills the page face
+     edge-to-edge — no inset that would reveal paper around a closed book. */
+  padding: 0;
   background:
     linear-gradient(145deg, #090909 0%, #020202 100%);
 }
@@ -882,7 +884,12 @@ h1 {
   font-weight: 800;
   letter-spacing: -0.04em;
   text-transform: uppercase;
-  max-width: 7ch;
+  /* fit-content keeps the foil background as wide as the longest word, so
+     background-clip:text never crops a wide glyph (e.g. the W in GLASGOW);
+     max-width still forces the wrap to LOVE / LETTER / TO / GLASGOW. */
+  width: fit-content;
+  max-width: 9ch;
+  padding-right: 0.08em;
 }
 
 .cover-tape-note {
@@ -955,17 +962,21 @@ h1 {
   opacity: 0;
 }
 
+/* Closed book: the page block hides behind the cover board, peeking only as a
+   thin fore-edge down the right side (and a hair at the foot) — not a mat. */
 .book.is-closed-cover .page-stack-right {
   left: 50%;
   right: auto;
-  transform: translateX(-50%) translate(6px, 6px) rotate(0.25deg);
+  top: 7px;
+  bottom: 7px;
+  transform: translateX(-50%) translate(6px, 4px);
 }
 
 .book.is-closed-cover .page-right {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
-  border-radius: 10px 16px 16px 10px;
+  border-radius: 3px 8px 8px 3px;
   box-shadow:
     0 22px 36px rgba(0, 0, 0, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -1668,7 +1679,7 @@ body.zoom-locked {
   }
 
   .book-board {
-    padding: 10px;
+    padding: 6px;
     border-radius: 4px 5px 5px 4px;
     transform: rotateX(4deg);
   }
@@ -1802,7 +1813,7 @@ body.zoom-locked {
   }
 
   .book-board {
-    padding: 8px;
+    padding: 5px;
     border-radius: 4px 5px 5px 4px;
   }
 
