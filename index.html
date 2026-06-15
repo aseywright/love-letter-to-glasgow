@@ -116,8 +116,18 @@
               <path d="m9 4.5 7.5 7.5L9 19.5" />
             </svg>
           </button>
+          <button class="control-spreads" id="spreadNavBtn" type="button" aria-label="Jump to spread" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M3 7h18M3 12h18M3 17h18" />
+            </svg>
+          </button>
         </div>
       </main>
+
+      <div class="spread-nav-backdrop" id="spreadNavBackdrop" hidden aria-hidden="true"></div>
+      <nav class="spread-nav" id="spreadNav" aria-label="Jump to spread" hidden>
+        <ul class="nav-spread-list" id="navSpreadList" role="list"></ul>
+      </nav>
     </div>
 
     <!-- GSAP drives the page-turn timing. If it fails to load, the turn falls

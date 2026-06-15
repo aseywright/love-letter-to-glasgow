@@ -16,6 +16,10 @@ const bookProgress = document.getElementById("bookProgress");
 const progressFill = document.getElementById("progressFill");
 const closedBook = document.querySelector(".closed-book");
 const spreadCaption = document.getElementById("spreadCaption");
+const spreadNavBtn = document.getElementById("spreadNavBtn");
+const spreadNav = document.getElementById("spreadNav");
+const spreadNavBackdrop = document.getElementById("spreadNavBackdrop");
+const navSpreadList = document.getElementById("navSpreadList");
 
 // One quiet narrative line per on-screen spread, in reading order. Index maps
 // 1:1 to the spread sequence: 0 = cover, 1 = inside cover, then each spread of
@@ -30,7 +34,7 @@ const NARRATIVE = [
   "A few blocks down the road a gap opens: a look, a gesture, and the street lets you in.",
   "After that it picks up, everything in motion, and me moving with it.",
   "I see it through glass and rain, soft at the edges, half-dreamed.",
-  "Faces surface in the windows, wearing the city like a coat, gone before I look twice.",
+  "Faces surface in the windows, gone before I look twice.",
   "Then the colour comes up: red coats, red brake lights, a pub door breathing out.",
   "On the bridges, time slips; could be now, could be a hundred winters back.",
   "The ones who've been here longest just stand and smoke, watching it like an old lover.",
@@ -40,10 +44,10 @@ const NARRATIVE = [
   "And shadow that pulls at people, takes them in like it's owed them.",
   "By night it turns electric: neon bleeding across glass, dressed-up and a little dangerous.",
   "Everyone's breathing smoke now: vapour, exhaust, the cold making ghosts of us all.",
-  "Some of them clock me and don't flinch. This is theirs, and they let me know it.",
+  "Some of them clock me and don't flinch. This is theirs — they let me know it.",
   "Between the statues, the living carry on, smaller, realer, harder to cast in bronze.",
-  "Minus fourteen and still out: kids up the monuments, old women wrapped against the lot of it.",
-  "There's always a man with a pint who's seen it all and forgiven most of it.",
+  "The cold doesn't thin the street. It just wraps up and stays.",
+  "There's a man with a pint who's seen it all and forgiven most.",
   "The door I came in by, lit now. Same city, but it's looking back at me this time.",
   "People start pointing things out, to me or to no one, and I look up every time.",
   "Glass and a Victorian stroll on one side, two hard men and a scruffy dog on the other. It holds them both.",
@@ -51,11 +55,11 @@ const NARRATIVE = [
   "Everyone threading through it: down the light, through the gaps, never quite still.",
   "Under the bridge at Central, we all wait for the same green light.",
   "A man on his phone outside the barbers; two steps away, the city hands you the best falafel through a hole in the wall.",
-  "Old names still glowing, art deco and bingo lights, glamour that never quite left.",
+  "Old names glowing, art deco and bingo lights, glamour that never left.",
   "And the tired ones, heads in hands, grinding it out so the season lands for someone.",
   "Red on red: a fist of balloons, an old woman at a postbox the colour of her coat.",
   "Slow down and it goes painterly: colour on colour, the ordinary worth framing.",
-  "It catches fire sometimes, and the whole street stops to watch it burn.",
+  "It catches fire sometimes; the whole street stops to watch it burn.",
   "Up close the hard faces go soft: a light, a look, a man made of three exposures.",
   "It hoards strange things: a deer's head, a broken mannequin, a man reading yesterday's news among them.",
   "The Barras in soft greens and reds, light coming through like it's blessing the lot.",
@@ -67,7 +71,7 @@ const NARRATIVE = [
   "Even the cheap glass turns to colour: orange hair, blue dress, light leaking out of ordinary rooms.",
   "The whole world keeps a shop here: coconuts and garlic and a nod from a stranger who saw me coming.",
   "Two strangers, both worth stopping for: a city full of people I'll love for exactly one frame.",
-  "And then it ends like a film: two people mid-stride, the marquee turning over. A love letter, to a city that only opens to the ones who stay out late.",
+  "And then it ends like a film: two people mid-stride, the marquee turning over. A love letter to a city that only opens to those who stay out late.",
 ];
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -196,6 +200,11 @@ book.addEventListener(
 document.addEventListener("keydown", (event) => {
   if (bookShell.classList.contains("hidden")) return;
 
+  if (event.key === "Escape" && navPanelOpen) {
+    closeNavPanel();
+    return;
+  }
+
   if (event.key === "Escape" && isZoomOpen()) {
     closeZoom();
     return;
@@ -253,6 +262,8 @@ function updateControls() {
     const ratio = spreads.length > 1 ? currentIndex / (spreads.length - 1) : 0;
     progressFill.style.width = `${ratio * 100}%`;
   }
+
+  syncNavActive();
 }
 
 function imagePath(file) {
@@ -1175,6 +1186,97 @@ function jumpToCover() {
   renderSpread(spreads[currentIndex]);
   updateControls();
   preloadAdjacent();
+}
+
+function jumpToSpread(index) {
+  if (isAnimating || spreads.length === 0) return;
+  if (index < 0 || index >= spreads.length || index === currentIndex) return;
+
+  currentIndex = index;
+  renderSpread(spreads[currentIndex]);
+  updateControls();
+  preloadAdjacent();
+  markActive();
+}
+
+// --- Spread nav panel ---------------------------------------------------
+let navPanelOpen = false;
+
+function buildNavList() {
+  navSpreadList.innerHTML = "";
+  spreads.forEach((_, i) => {
+    const narrative = NARRATIVE[i] || "";
+    const label = narrative
+      ? (narrative.length > 42 ? narrative.slice(0, 40) + "…" : narrative)
+      : (i === 0 ? "Cover" : `Spread ${i + 1}`);
+
+    const li = document.createElement("li");
+    li.className = "nav-spread-item" + (i === currentIndex ? " is-active" : "");
+    li.setAttribute("role", "button");
+    li.setAttribute("tabindex", "0");
+    li.dataset.index = i;
+
+    const num = document.createElement("span");
+    num.className = "nav-spread-num";
+    num.textContent = i === 0 ? "Cover" : String(i + 1);
+
+    const text = document.createElement("span");
+    text.className = "nav-spread-label";
+    text.textContent = label;
+
+    li.appendChild(num);
+    li.appendChild(text);
+
+    li.addEventListener("click", () => { jumpToSpread(i); closeNavPanel(); });
+    li.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); jumpToSpread(i); closeNavPanel(); }
+    });
+
+    navSpreadList.appendChild(li);
+  });
+}
+
+function syncNavActive() {
+  if (!navPanelOpen) return;
+  navSpreadList.querySelectorAll(".nav-spread-item").forEach((el) => {
+    const active = Number(el.dataset.index) === currentIndex;
+    el.classList.toggle("is-active", active);
+    if (active) el.scrollIntoView({ block: "nearest" });
+  });
+}
+
+function openNavPanel() {
+  if (navPanelOpen) return;
+  navPanelOpen = true;
+  buildNavList();
+  spreadNav.hidden = false;
+  spreadNavBackdrop.hidden = false;
+  requestAnimationFrame(() => {
+    spreadNav.classList.add("is-open");
+    spreadNavBackdrop.classList.add("is-open");
+  });
+  spreadNavBtn.setAttribute("aria-expanded", "true");
+  markActive();
+}
+
+function closeNavPanel() {
+  if (!navPanelOpen) return;
+  navPanelOpen = false;
+  spreadNav.classList.remove("is-open");
+  spreadNavBackdrop.classList.remove("is-open");
+  spreadNavBtn.setAttribute("aria-expanded", "false");
+  spreadNavBtn.focus();
+  setTimeout(() => {
+    spreadNav.hidden = true;
+    spreadNavBackdrop.hidden = true;
+  }, 290);
+}
+
+if (spreadNavBtn) {
+  spreadNavBtn.addEventListener("click", () => navPanelOpen ? closeNavPanel() : openNavPanel());
+}
+if (spreadNavBackdrop) {
+  spreadNavBackdrop.addEventListener("click", closeNavPanel);
 }
 
 // --- Photo zoom ---------------------------------------------------------
