@@ -2,11 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Love Letter to Glasgow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Ambient night-light: soft glows and the odd passing-headlight sweep,
+         drifting in the dark space behind/around the book. -->
+    <div class="ambient" id="ambient" aria-hidden="true">
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+      <span class="orb orb-4"></span>
+      <span class="orb orb-5"></span>
+      <span class="headlight headlight-1"></span>
+      <span class="headlight headlight-2"></span>
+    </div>
+
     <div class="page-shell">
       <header class="hero-screen" id="heroScreen">
         <div class="hero-scene">
@@ -26,16 +45,13 @@
             <div class="closed-book">
               <div class="closed-book-spine"></div>
               <div class="closed-book-cover">
-                <img src="Images/Cover.jpg" alt="" />
-                <div class="cover-grid"></div>
-                <div class="cover-image-frame"></div>
+                <div class="cover-spine"></div>
                 <div class="cover-tape">
                   <span class="cover-tape-title">Love Letter to Glasgow</span>
                   <span class="cover-tape-note">Fragments from the street</span>
                 </div>
+                <div class="cover-plate"><img src="Images/Cover.jpg" alt="" /></div>
                 <div class="cover-spine-note">For Fern</div>
-                <div class="cover-hinge-shadow"></div>
-                <div class="cover-vignette"></div>
               </div>
             </div>
           </div>
@@ -67,43 +83,56 @@
                 <div class="flip-sheet hidden" id="flipSheet" aria-hidden="true">
                   <div class="sheet-face sheet-front" id="sheetFront"></div>
                   <div class="sheet-face sheet-back" id="sheetBack"></div>
+                  <div class="sheet-shade sheet-shade-front" id="sheetShadeFront"></div>
+                  <div class="sheet-shade sheet-shade-back" id="sheetShadeBack"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        <div class="spread-caption" id="spreadCaption" hidden>
+          <p></p>
+        </div>
+
         <div class="book-controls">
-          <button class="button button-secondary" id="coverBtn" aria-label="Return to cover">
-            <span class="button-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M6 4.5h10.5a2 2 0 0 1 2 2v11.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 0 4 22V7a2.5 2.5 0 0 1 2-2.45Z" />
-                <path d="M6.5 6H18" />
-                <path d="M6.5 20H18" />
-              </svg>
-            </span>
-            <span class="button-label">Cover</span>
+          <button class="nav-arrow nav-arrow-prev" id="prevBtn" type="button" aria-label="Previous spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 4.5 7.5 12l7.5 7.5" />
+            </svg>
           </button>
-          <button class="button button-secondary" id="prevBtn" aria-label="Previous spread">
-            <span class="button-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M14.5 5.5 8 12l6.5 6.5" />
-              </svg>
-            </span>
-            <span class="button-label">Previous</span>
+          <button class="control-cover" id="coverBtn" type="button" aria-label="Return to cover">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6 4.5h10.5a2 2 0 0 1 2 2v11.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 0 4 22V7a2.5 2.5 0 0 1 2-2.45Z" />
+              <path d="M6.5 6H18" />
+              <path d="M6.5 20H18" />
+            </svg>
           </button>
-          <button class="button button-secondary" id="nextBtn" aria-label="Next spread">
-            <span class="button-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
-              </svg>
-            </span>
-            <span class="button-label">Next</span>
+          <div class="progress-track" aria-hidden="true">
+            <span class="progress-fill" id="progressFill"></span>
+          </div>
+          <button class="nav-arrow nav-arrow-next" id="nextBtn" type="button" aria-label="Next spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="m9 4.5 7.5 7.5L9 19.5" />
+            </svg>
+          </button>
+          <button class="control-spreads" id="spreadNavBtn" type="button" aria-label="Jump to spread" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M3 7h18M3 12h18M3 17h18" />
+            </svg>
           </button>
         </div>
       </main>
+
+      <div class="spread-nav-backdrop" id="spreadNavBackdrop" hidden aria-hidden="true"></div>
+      <nav class="spread-nav" id="spreadNav" aria-label="Jump to spread" hidden>
+        <ul class="nav-spread-list" id="navSpreadList" role="list"></ul>
+      </nav>
     </div>
 
+    <!-- GSAP drives the page-turn timing. If it fails to load, the turn falls
+         back to the CSS keyframe animation (see playTurn in script.js). -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
